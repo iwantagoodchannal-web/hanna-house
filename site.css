@@ -536,7 +536,10 @@ body.on-still #rail,body.exploring #rail{display:none}
   margin:0 auto; padding:20px clamp(18px,4vw,32px) calc(20px + env(safe-area-inset-bottom));
   background:rgba(245,241,232,.97); border-top:1px solid var(--hair);
   box-shadow:0 -8px 30px rgba(29,26,22,.08);
-  opacity:1; transform:none;                     /* no gating — it is the point */
+  /* the earlier compact rule hid this behind a .on class with
+     visibility:hidden + pointer-events:none — both must be undone here or the
+     Send button exists but is invisible and unclickable */
+  opacity:1; transform:none; visibility:visible; pointer-events:auto;
 }
 #review-send{
   padding:20px 38px; border-radius:999px; border:0;
