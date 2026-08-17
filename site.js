@@ -525,6 +525,9 @@ if(location.hash){ const h=location.hash.slice(1); if(pages.includes(h)&&h!=='wi
     }
     ok.addEventListener('click', ()=>{ s.ok = !s.ok; save(); });
     ta.addEventListener('input', ()=>{ s.note = ta.value; save(); });
+    /* fade the sign-off pill down while this box has focus */
+    ta.addEventListener('focus', ()=>document.body.classList.add('typing'));
+    ta.addEventListener('blur',  ()=>document.body.classList.remove('typing'));
     if(img.complete) fit(); else img.addEventListener('load', fit);
     addEventListener('resize', fit);
     paint();

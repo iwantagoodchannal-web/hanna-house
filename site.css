@@ -674,10 +674,18 @@ body.on-still #rail,body.exploring #rail{display:none}
 #review-summary .review-count{margin:0}
 .review-status:empty{display:none}
 .review-status{flex-basis:100%; text-align:center; margin:0}
-/* room to scroll clear of the floating pill */
-.review-page{padding-bottom:132px}
+/* Room to scroll clear of the floating pill. Each card also reserves a
+   pill-height gap beneath it, so a centred card's note box is never sitting
+   under the bar — the overlap read as an accident rather than a choice. */
+.review-page{padding-bottom:150px}
+.review-card{padding-bottom:26px}
+.review-card:last-of-type{margin-bottom:40px}
 @media (max-width:640px){
   #review-summary{left:14px; right:14px; transform:none; width:auto;
     max-width:none; justify-content:center; border-radius:22px}
-  .review-page{padding-bottom:150px}
+  .review-page{padding-bottom:168px}
 }
+/* the pill dims out of the way while he is typing, and comes back on blur —
+   nothing ever covers the box he is working in */
+#review-summary{transition:opacity .25s var(--ease), transform .25s var(--ease)}
+body.typing #review-summary{opacity:.14; pointer-events:none}
