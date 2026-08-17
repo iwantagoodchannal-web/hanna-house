@@ -120,7 +120,13 @@ if(NOUI) document.body.classList.add('noui');
 const POST=m=>{ if(window.parent!==window){ try{ parent.postMessage(m,'*'); }catch(e){} } };
 const EMB={mode:'none',t:0,tTgt:0,cur:null,poseTgt:null,warm:-1,fovBase:72};
 
-const H = 118, DOOR_H = 80;                     // ceiling, tape-measured
+const H = 118, DOOR_H = 80, KV = 150;           // ceiling, tape-measured · KV = kitchen vault (C-53)
+// KV: the vault height lived as a bare 150 in nine places across 01/06/08/10.
+// Scan 17 Aug read it three ways — 148.0 / 149.4 / 150.0 — which BRACKETS 150,
+// so the scan CONFIRMS the estimate rather than replacing it. Value unchanged;
+// what changed is that it is now named and lives in one place.
+// ⚠ Not every literal 150 in parts/ is this height — 09-dining's 150.5/150.6 are
+// x-coordinates, 12-engine's are camera targets. Grep with care.
 const PLAN = {
   cabinet:[
     // 17" case + a 2" door slot = Jake's 19" overall. The door used to be built
@@ -159,7 +165,7 @@ const PLAN = {
     // ONE continuous north wall: bathroom, pantry and the kitchen sink leg all
     // share it. The old k_n / k_nw jog was a fabrication.
     {id:'w_back',x0:-110.4, x1:174.1, z0:-101.5,z1:-95.5},
-    {id:'w_bk2', x0:174.1,  x1:447,   z0:-101.5,z1:-95.5, h:150, tint:0xe2dccd, open:[[260,316,44,92]]}, // W23, cream kitchen wall
+    {id:'w_bk2', x0:174.1,  x1:447,   z0:-101.5,z1:-95.5, h:KV, tint:0xe2dccd, open:[[260,316,44,92]]}, // W23, cream kitchen wall
     // dining shell, 15'-0" x 20'-8-1/8" (DINING 104). Both side walls stop
     // ~76" south of the run - north of that the room is open. Zone 04's
     // "three walls and one open side", and the drawing agrees.
@@ -172,7 +178,7 @@ const PLAN = {
     {id:'w_hs',  x0:-110.4, x1:-6.1,  z0:106.1, z1:112,  open:[[-108.3,-50.3]]}, // D03 pair, 58"
     // kitchen east wall, from the sheet's 21'-7-3/4" - the one printed dimension
     // that had never been used. It puts the wall 56" further east than my guess.
-    {id:'k_e',   x0:447,    x1:453,   z0:-101.5,z1:76.4, inferred:true, h:150, tint:0xe2dccd},
+    {id:'k_e',   x0:447,    x1:453,   z0:-101.5,z1:76.4, inferred:true, h:KV, tint:0xe2dccd},
     // the great room past the island is outside the commission - this is where
     // the model honestly stops, not a wall anyone measured
     {id:'k_s',   x0:188.4,  x1:453,   z0:76.4,  z1:82.4, inferred:true, tint:0xe2dccd},
@@ -181,7 +187,7 @@ const PLAN = {
   // canted hood and the harlequin medallion all sit on that face. Deleting it
   // was my error - Jake caught it. Length is set by the range + its flanking
   // drawer banks, not guessed.
-  wall45:{id:'k_45', ax:393, az:-95.5, bx:447, bz:-41.5, t:6, inferred:true},
+  wall45:{id:'k_45', ax:393, az:-95.5, bx:447, bz:-41.5, t:6, h:KV, inferred:true},
   rooms:[
     {id:'bath', l:'BATHROOM', x0:0,     x1:75.75, z0:-101.5,z1:-19},     // 6'-3-3/4" x 5'-10-1/2"
     {id:'pant', l:'PANTRY',   x0:81.82, x1:168,   z0:-101.5,z1:-19},     // 86.2" x 5'-10-1/2"
@@ -205,7 +211,12 @@ const PLAN = {
     // the east counter (centre ≈298) — not the wall-to-wall midpoint. x 228–365,
     // centre 296.5. Final verify against the incoming phone video.
     {id:'k_isl', t:'island',  x0:228,  x1:365,  z0:-32,  z1:-8,  h:36, oh:'w'},   // work-top half only
-    {id:'k_frdg',t:'tall',    x0:422,  x1:447,  z0:2,    z1:47,  h:84},   // 45" panel-front
+    // C-57: 48" wide, not 45". Jake, 17 Aug: "the fridge itself is exactly four
+    // feet wide" — flat, no hedge, and it supersedes the C-13 placeholder, which
+    // never had a tape behind it. Grown SOUTH (z1 47→50), never north: C-44 pulled
+    // k_ce back to end at the fridge's north face z=2, so growing north would
+    // re-create the exact clip Jake reported ("one of the cabinets clips into it").
+    {id:'k_frdg',t:'tall',    x0:422,  x1:447,  z0:2,    z1:50,  h:84},   // 48" panel-front (C-57)
   ],
   sinks:[
     {x0:266,x1:310,z0:-91.5,z1:-74.5,h:36},          // centred on W23 (drawing)
@@ -786,45 +797,60 @@ PLAN.walls.forEach(buildWall);
   const w=PLAN.wall45, dx=w.bx-w.ax, dz=w.bz-w.az, len=Math.hypot(dx,dz);
   const ang=-Math.atan2(dz,dx);
   const cx=(w.ax+w.bx)/2, cz=(w.az+w.bz)/2;
-  const m=box(len,150,w.t,TINT(0xe2dccd),cx,75,cz,G.walls);
-  m.rotation.y=ang; m.userData={y0:0,y1:150};
+  // C-53: this height used to be the literal 150 twice over — once as the height
+  // and once, silently, as the 75 that centred the slab. PLAN.wall45 now carries
+  // h:KV, so the chamfer wall reads its own entry and the last implicit copy of
+  // the vault height is gone rather than rehomed.
+  const m=box(len,w.h,w.t,TINT(0xe2dccd),cx,w.h/2,cz,G.walls);
+  m.rotation.y=ang; m.userData={y0:0,y1:w.h};
   // angled base cabinets + granite top flanking the range, and the medallion
-  const nx=-Math.sin(ang)*0, g2=new THREE.Group();
-  g2.position.set(cx,0,cz); g2.rotation.y=ang; G.kit.add(g2);
+  const g2=new THREE.Group();
+  // ROOT CAUSE of C-29 and C-55 — fixed here rather than patched a third time.
+  // This group used to sit on the wall's CENTRE line, so local z = 0 was 3"
+  // INSIDE the wall and every solid had to be authored at z >= w.t/2 merely to
+  // exist. Twice now someone has written a small z meaning "against the wall"
+  // and buried a whole assembly: C-29 ("chamfer assembly inside the wall",
+  // built at z = 1.1-1.6) and C-55 (six drawer faces at z = 0.9, 27.1" out).
+  // The origin now sits on the wall FACE, offset along this group's own +z, so
+  // local z IS depth out from the face: 0 is the face, negative is inside the
+  // wall, and the next author who writes 0.9 gets something 0.9" proud instead
+  // of something invisible. Every solid below is exactly w.t/2 lower in local z
+  // than it was, and not one of them has moved in world space.
+  const WF=w.t/2;
+  g2.position.set(cx+Math.sin(ang)*WF, 0, cz+Math.cos(ang)*WF);
+  g2.rotation.y=ang; G.kit.add(g2);
   // the range occupies the middle 48" of the chamfer, so the base cabinets and
   // the granite top are built as two flanks, not one slab through the stove
   const RW=48, fl=(len-RW)/2, fc=RW/2+fl/2;
-  // The wall is w.t thick and centred on the line, so its face is at local
-  // z = w.t/2 and the flank cabinets stand on that face. Measured OUT from it
-  // rather than written as literals, so a change to PLAN.wall45.t or to the
-  // cabinet depth carries through to everything hung off the cabinet front.
-  const WF=w.t/2, CD=25, CZ=WF+CD/2, CF=WF+CD;   // wall face · cabinet depth, centre, front
+  const CD=25;                    // flank cabinet depth, out from the wall face
   for(const sx of [-fc,fc]){
-    box(fl,36,CD,MAT.counter,sx,18,CZ,g2);                 // angled base run
+    box(fl,36,CD,MAT.counter,sx,18,CD/2,g2);               // angled base run
     // granite overhangs the OUTER end only — the old symmetric +1.2 widening
-    // pushed each slab 0.6" into the range gap, through the range top (review)
-    box(fl+0.6,1.6,CD+1.5,MAT.granite,sx+Math.sign(sx)*0.3,36.8,CZ,g2);
-    // C-55: these were authored at local z = 0.9 — 27.1" behind the cabinet
-    // front and sealed inside the wall slab, so all six rendered nothing. C-29
-    // ("chamfer assembly inside the wall") in the same file and the same
-    // assembly. They now hang off CF, set 0.05" INTO the cabinet so no face is
-    // coplanar with its front — the C-49 door-panel rule.
+    // pushed each slab 0.6" into the range gap, through the range top (review).
+    // -0.75 to 25.75: scribed 0.75" into the wall, 0.75" proud of the doors.
+    box(fl+0.6,1.6,CD+1.5,MAT.granite,sx+Math.sign(sx)*0.3,36.8,CD/2,g2);
+    // C-55: these were authored at local z = 0.9 — under the old centre-line
+    // origin that was 27.1" behind the cabinet front and sealed inside the wall
+    // slab, so all six rendered nothing. They hang off the cabinet front at CD,
+    // set 0.05" into it so no face is coplanar with it — the C-49 panel rule.
     const DT=0.5;
-    for(let d=0;d<3;d++) box(fl-4,7.5,DT,MAT.beam,sx,10+d*9,CF+DT/2-0.05,g2);  // drawer faces
+    for(let d=0;d<3;d++) box(fl-4,7.5,DT,MAT.beam,sx,10+d*9,CD+DT/2-0.05,g2);  // drawer faces
   }
-  // the wall is 6" thick and centred on the line, so its face is at local z = +3.
-  // Every one of these used to be built at z = 1.1-1.6, i.e. inside the wall.
-  box(len-6,18,0.7,travM(len-6,18),0,45,3.2,g2);           // travertine splash, 36-54
-  box(40,30,0.8,MAT.trav,0,55,3.3,g2);                     // harlequin medallion field
-  box(42,32,0.7,MAT.beam,0,55,3.15,g2);                    // its bronze listello frame
+  // Local z is now depth out from the wall face, so these read as what they are:
+  // a 0.2" splash on the wall, the medallion 0.1" proud of the splash, and its
+  // frame 0.05" proud again. They were 3.2 / 3.3 / 3.15 against a centre-line
+  // origin, which said nothing to anyone.
+  box(len-6,18,0.7,travM(len-6,18),0,45,0.2,g2);           // travertine splash, 36-54
+  box(40,30,0.8,MAT.trav,0,55,0.3,g2);                     // harlequin medallion field
+  box(42,32,0.7,MAT.beam,0,55,0.15,g2);                    // its bronze listello frame
   // solid cabinet directly over the hood - sec_124. There is no void and no
   // cabinet band at 108"; blue gable paint runs above the crown.
-  box(48,16,13,MAT.counter,0,94,7,g2);
-  box(52,3.2,15,MAT.counter,0,103.6,8,g2);                 // crown
+  box(48,16,13,MAT.counter,0,94,4,g2);
+  box(52,3.2,15,MAT.counter,0,103.6,5,g2);                 // crown
   for(const sx of [-fc,fc]){
-    box(fl,32,13,MAT.counter,sx,70,7,g2);                  // flanking uppers, 54-86
-    box(fl,14,13,MAT.counter,sx,93,7,g2);                  // short upper tier, 86-100
-    box(fl+2,3.2,15,MAT.counter,sx,101.6,8,g2);            // crown
+    box(fl,32,13,MAT.counter,sx,70,4,g2);                  // flanking uppers, 54-86
+    box(fl,14,13,MAT.counter,sx,93,4,g2);                  // short upper tier, 86-100
+    box(fl+2,3.2,15,MAT.counter,sx,101.6,5,g2);            // crown
   }
 })();
 
@@ -1171,14 +1197,30 @@ PLAN.walls.forEach(buildWall);
   // C-44: the range-leg uppers + crown also stopped at z=12, clipping through
   // the 84"-tall fridge's front face — everything now ends at the fridge (z=2)
   pbox(422,435,-41.5,2,54,100,MAT.alder,G.kit);       // over the range leg
-  pbox(420.6,436.4,-41.5,3.4,100,103.5,MAT.alder,G.kit);
+  // the two crowns used to BOTH overhang the z=2 junction - this one ran to 3.4
+  // and the fridge's back to 0.6, so they overlapped 15.8" x 2.8" and shared all
+  // three of their y=100 underside, y=103.5 top and x=420.6 return faces. The
+  // underside is the one you see from the room. They are one continuous crown
+  // across an internal step, so they now BUTT at z=2: opposite-facing coplanar
+  // pairs are back-face culled and cannot fight. The 1.4" overhangs that face
+  // open air (z -41.5 and z 48.4) are untouched.
+  pbox(420.6,436.4,-41.5,2,100,103.5,MAT.alder,G.kit);
   panelsZ(-41.5,2,56,98,422);
-  pbox(422,447,2,47,84,100,MAT.alder,G.kit);          // over the fridge
-  pbox(420.6,447,0.6,48.4,100,103.5,MAT.alder,G.kit);
-  for(const x of [218,340,362]) pbox(x-0.5,x+0.5,-83.9,-83.4,54,96,MAT.rack,G.kit);
+  // C-57: fridge is 48" (Jake: "the fridge itself is exactly four feet wide"),
+  // so k_frdg's z1 went 47 -> 50 and these follow it. It grows SOUTH: growing
+  // north would push back over z=2 into k_ce and re-create the exact clipping
+  // Jake reported in C-44. Crown keeps its 1.4" south overhang (50 + 1.4).
+  pbox(422,447,2,50,84,100,MAT.alder,G.kit);          // over the fridge
+  pbox(420.6,447,2,51.4,100,103.5,MAT.alder,G.kit);
+  // battens sat 0.4" inside the upper boxes with their bottoms exactly on the
+  // cabinet bottom at y=54 - three coplanar downward faces, visible from below.
+  // Bottom nudged to 54.25 (C-49's beam-top precedent) rather than moving them
+  // proud: at z -83.5..-83.0 they would land ON the door panels at x=340 and
+  // 362, trading one coplanar pair for a worse one.
+  for(const x of [218,340,362]) pbox(x-0.5,x+0.5,-83.9,-83.4,54.25,96,MAT.rack,G.kit);
   // blue-grey gable wall above the cabinets, zone 07 / sec_110,124
-  (function(){const m=pbox(174.1,447,-95.1,-94.6,88,150,MAT.vault,G.walls);
-     m.userData={y0:88,y1:150};})();
+  (function(){const m=pbox(174.1,447,-95.1,-94.6,88,KV,MAT.vault,G.walls);
+     m.userData={y0:88,y1:KV};})();
   // 45-degree range + canted hood
   const s2=PLAN.stove, g=new THREE.Group();
   g.position.set(s2.cx,0,s2.cz); g.rotation.y=-s2.rot*Math.PI/180;
@@ -1231,7 +1273,10 @@ PLAN.walls.forEach(buildWall);
   // visible object in every kitchen frame and there was no light fitting at all
   const pd=new THREE.Mesh(new THREE.CylinderGeometry(3.5,12,9,22),MAT.dark);
   pd.position.set(ISLCX,70.5,-14); G.kit.add(pd);            // over the island centre (C-46)
-  pbox(ISLCX-0.5,ISLCX+0.5,-14.5,-13.5,75,150,MAT.dark,G.kit);// cord reaches the 150" vault
+  // NOT A DERIVED HALF: the 75 is the pendant's TOP (dome centred at y 70.5,
+  // 9" tall, so 66..75), and only coincidentally equals KV/2. If KV ever moves,
+  // this 75 stays put - it is pinned to the pendant, not to the ceiling.
+  pbox(ISLCX-0.5,ISLCX+0.5,-14.5,-13.5,75,KV,MAT.dark,G.kit);  // cord to the vault
 })();
 
 /* ===================== furniture ===================== */
@@ -1420,12 +1465,13 @@ G.exist.visible=false;
   // Jake: "the roof in the kitchen is much taller than the roof in the dining
   // room ... the ceiling in the dining room is the exact height of the cabinets".
   // H = 118 confirmed for the dining side; the kitchen goes to 12'-6".
-  const KH=150;
-  pbox(174.1,447,-101.5,76.4,KH,KH+1.5,MAT.vault,G.ceil);
-  pbox(174.1,447,-101.5,76.4,KH-0.4,KH,M(0xf2ede2,0.95),G.ceil);
-  pbox(441,447,-101.5,76.4,H,KH,MAT.vault,G.ceil);
-  pbox(174.1,180,-101.5,76.4,H,KH,MAT.wall,G.ceil);
-  pbox(174.1,447,70.4,76.4,H,KH,MAT.vault,G.ceil);
+  // C-53: this was `const KH=150`, a second definition of the vault height that
+  // nothing else read. KV (01-plan.js, beside H and DOOR_H) is now the only one.
+  pbox(174.1,447,-101.5,76.4,KV,KV+1.5,MAT.vault,G.ceil);
+  pbox(174.1,447,-101.5,76.4,KV-0.4,KV,M(0xf2ede2,0.95),G.ceil);
+  pbox(441,447,-101.5,76.4,H,KV,MAT.vault,G.ceil);
+  pbox(174.1,180,-101.5,76.4,H,KV,MAT.wall,G.ceil);
+  pbox(174.1,447,70.4,76.4,H,KV,MAT.vault,G.ceil);
 })();
 G.ceil.visible=false;
 /* Beams live in G.walls, not G.ceil - the frames show them constantly
@@ -1434,7 +1480,7 @@ G.ceil.visible=false;
 (function(){
   const bm=(x0,x1,z0,z1,y0,y1)=>{const m=pbox(x0,x1,z0,z1,y0,y1,MAT.beam,G.walls);
     m.userData={y0,y1};};
-  for(let z=-92;z<70;z+=34) bm(192,445,z,z+6,140,150);      // kitchen vault beams
+  for(let z=-92;z<70;z+=34) bm(192,445,z,z+6,140,KV);       // kitchen vault beams
   bm(168,176,-19,76.4,H-14,H);                                // head of the kitchen passage
   bm(-6.1,0,-19,75.7,H-16,H);                                 // head of the dining opening
   // C-47 (Jake): the beams across the dining/coffee ceiling are THICK timber
@@ -1443,8 +1489,19 @@ G.ceil.visible=false;
   // C-49: beam tops stopped at exactly 118 — the ceiling plane — so every beam
   // top face z-fought the ceiling ("supports… flickering in hollow", Jake).
   // 117.6 tucks them under the 117.65 ceiling face: solid timber, no fight.
-  bm(-6.1,188.4,71,81,106,117.6);                             // across the open north edge
-  for(const z of [6,38,70]) bm(-6.1,188.4,z-5,z+5,106,117.6); // tile passage, sec_074
+  // The north-edge beam and the tile-passage rhythm both claimed z = 65..81. As
+  // authored they overlap by 4" over the full 194" run, so the north edge renders
+  // as ONE 16"-wide beam where C-47 says 10", and the two bottom faces are
+  // coincident at y = 106 across 778 in2. The passage loop now skips any bay that
+  // would run into the edge beam, rather than the bay being deleted: the rhythm
+  // still says 6 / 38 / 70, and the reason the third one cannot be built is in
+  // the source instead of in someone's memory. The edge beam is the one that
+  // stays because it is anchored - it centres on z = 76, where the side walls
+  // stop and the room opens.
+  const EZ0=71, EZ1=81;
+  bm(-6.1,188.4,EZ0,EZ1,106,117.6);                           // across the open north edge
+  for(const z of [6,38,70]) if(z+5<=EZ0)
+    bm(-6.1,188.4,z-5,z+5,106,117.6);                         // tile passage, sec_074
   // (z = -14 deleted - it intersected the cabinet crown over 170 inches)
 })();
 
@@ -1485,9 +1542,10 @@ G.flags.visible=false;
   // a real PointLight. 31 point lights made the forward renderer evaluate 30+
   // lights per fragment — the frame-rate complaint traced straight to this.
   // The lit discs + baked AO carry the look; the remaining lights are stronger.
+  const CANR=3.4;                                     // trim-ring radius
   const can=(x,z,ch,glow)=>{
     const CH=ch||H;                                   // ceiling height at this can
-    const t=new THREE.Mesh(new THREE.CylinderGeometry(3.4,3.4,1.2,18),trim);
+    const t=new THREE.Mesh(new THREE.CylinderGeometry(CANR,CANR,1.2,18),trim);
     t.position.set(x,CH-0.8,z); G.ceil.add(t);
     const l=new THREE.Mesh(new THREE.CylinderGeometry(2.6,2.6,0.25,18),lit);
     l.position.set(x,CH-1.45,z); G.ceil.add(l);
@@ -1499,8 +1557,28 @@ G.flags.visible=false;
   can(40,150,0,1); can(110,150);    can(40,204);       can(110,204,0,1);
   can(-70,-60);    can(-70,10);     can(-70,80);       // hallway
   can(-24,-60,0,1);can(-24,10);     can(-24,80);
+  // A can cannot be inside a wall. Of this 5x3 kitchen grid exactly one lands in
+  // the C-24 chamfer: (406,-80) sits 1.77" from the chamfer's centre plane, so a
+  // 3.4" trim ring in a 6" wall renders as a disc half-swallowed by it — the
+  // C-29/C-55 class again, arriving from a different direction. All 15 were
+  // checked; the next nearest is 50.5" clear.
+  // Skipped by TESTING the fixture against PLAN.wall45, not by deleting the
+  // coordinate: the grid still says what it wants, and a chamfer that moves
+  // re-evaluates this instead of stranding a hand-removed hole in the pattern.
+  // This removes no light — only 3 of the 15 cans carry a PointLight and this is
+  // not one of them, so what goes is a trim ring and a lit disc that were already
+  // invisible. Whether a fixture SHOULD light that corner is Jake's call, and
+  // nothing here forecloses it.
+  const w45=PLAN.wall45, L45=Math.hypot(w45.bx-w45.ax,w45.bz-w45.az),
+        ux=(w45.bx-w45.ax)/L45, uz=(w45.bz-w45.az)/L45;
+  const inChamfer=(x,z)=>{
+    const px=x-w45.ax, pz=z-w45.az, along=px*ux+pz*uz;
+    return Math.abs(px*uz-pz*ux) <= w45.t/2+CANR      // perpendicular into the slab
+        && along >= -CANR && along <= L45+CANR;       // and within the wall's run
+  };
   for(const x of [214,262,310,358,406]) for(const z of [-80,-30,20])
-    can(x,z,150, (x===262&&z===-30)||(x===358&&z===-30)||(x===310&&z===20));
+    if(!inChamfer(x,z))
+      can(x,z,KV, (x===262&&z===-30)||(x===358&&z===-30)||(x===310&&z===20));
 })();
 
 /* ===== the red entry accent wall + apothecary chest terminate every westward
