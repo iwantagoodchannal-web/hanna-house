@@ -692,9 +692,21 @@ function doorSet(w,alongZ,o){
   const A=(p,q,y0,y1,m)=>{const b=alongZ?pbox(t0-CT,t1+CT,p,q,y0,y1,m,G.walls)
                                        :pbox(p,q,t0-CT,t1+CT,y0,y1,m,G.walls);
     b.userData={y0,y1}; return b;};
-  A(o.a-C,o.a,0,HD+C,MAT.alder);                    // casing legs
-  A(o.b,o.b+C,0,HD+C,MAT.alder);
-  A(o.a-C,o.b+C,HD,HD+C,MAT.alder);                 // head
+  // The trim stops R short of the opening on all three sides. Built flush, every
+  // casing leg's reveal face landed EXACTLY on the jamb face of the wall segment
+  // beside it (507 in2 a leg on D17 and D18, 491 on D03) and every casing head's
+  // underside landed exactly on its header's (182 / 201 / 342 in2) - alder
+  // against plaster, same-side and both exposed inside the opening. That is the
+  // same pair Jake reported as "the door to the bathroom is flickering": C-49
+  // offset the leaf PANEL behind it and never touched the casing, so the doorway
+  // kept fighting. Stopping short rather than overlapping keeps the clear opening
+  // exactly as PLAN gives it and adds no new interpenetration - the trim's own
+  // end faces end up buried in the wall, and only the 0.8" proud strips carry a
+  // hairline reveal line, which is what casing does anyway.
+  const R=0.05;
+  A(o.a-C,o.a-R,0,HD+C,MAT.alder);                  // casing legs
+  A(o.b+R,o.b+C,0,HD+C,MAT.alder);
+  A(o.a-C,o.b+C,HD+R,HD+C,MAT.alder);               // head
   A(o.a-C-1.6,o.b+C+1.6,HD+C,HD+C+1.4,MAT.alder);   // projecting head cap board
   // Two leaves are built: one CLOSED filling the opening, one OPEN parked flat
   // against the wall. Toggled by the Doors button, and walk mode opens them so
@@ -782,12 +794,23 @@ PLAN.walls.forEach(buildWall);
   // the range occupies the middle 48" of the chamfer, so the base cabinets and
   // the granite top are built as two flanks, not one slab through the stove
   const RW=48, fl=(len-RW)/2, fc=RW/2+fl/2;
+  // The wall is w.t thick and centred on the line, so its face is at local
+  // z = w.t/2 and the flank cabinets stand on that face. Measured OUT from it
+  // rather than written as literals, so a change to PLAN.wall45.t or to the
+  // cabinet depth carries through to everything hung off the cabinet front.
+  const WF=w.t/2, CD=25, CZ=WF+CD/2, CF=WF+CD;   // wall face · cabinet depth, centre, front
   for(const sx of [-fc,fc]){
-    box(fl,36,25,MAT.counter,sx,18,15.5,g2);               // angled base run
+    box(fl,36,CD,MAT.counter,sx,18,CZ,g2);                 // angled base run
     // granite overhangs the OUTER end only — the old symmetric +1.2 widening
     // pushed each slab 0.6" into the range gap, through the range top (review)
-    box(fl+0.6,1.6,26.5,MAT.granite,sx+Math.sign(sx)*0.3,36.8,15.5,g2);
-    for(let d=0;d<3;d++) box(fl-4,7.5,0.5,MAT.beam,sx,10+d*9,0.9,g2);  // drawer faces
+    box(fl+0.6,1.6,CD+1.5,MAT.granite,sx+Math.sign(sx)*0.3,36.8,CZ,g2);
+    // C-55: these were authored at local z = 0.9 — 27.1" behind the cabinet
+    // front and sealed inside the wall slab, so all six rendered nothing. C-29
+    // ("chamfer assembly inside the wall") in the same file and the same
+    // assembly. They now hang off CF, set 0.05" INTO the cabinet so no face is
+    // coplanar with its front — the C-49 door-panel rule.
+    const DT=0.5;
+    for(let d=0;d<3;d++) box(fl-4,7.5,DT,MAT.beam,sx,10+d*9,CF+DT/2-0.05,g2);  // drawer faces
   }
   // the wall is 6" thick and centred on the line, so its face is at local z = +3.
   // Every one of these used to be built at z = 1.1-1.6, i.e. inside the wall.
@@ -935,7 +958,13 @@ PLAN.walls.forEach(buildWall);
     // cove wash over the field + a strip under the service ledge (reference 04) -
     // the wine half had no lighting at all
     const glow=new THREE.MeshBasicMaterial({color:0xfff0d2});
-    B(iL,iR,zc-7.6,zc-6.6,TOP+0.4,TOP+1.2,glow);
+    // C-52 follow-up: the cove wash was at z -19.6..-18.6 / y 112.4..113.2, which
+    // is inside the run wall AND behind the case back AND under the crown block -
+    // sealed on every side, rendering nothing. It cannot live at that height at
+    // all: the crown band (110.4-113) is solid across the full case depth. Now a
+    // valance strip on the FRONT face just below the crown, washing down the
+    // field - the same idiom as the coffee bay's under-cabinet light.
+    B(iL,iR,wine.z1-3.4,wine.z1-2.4,109.4,110.2,glow);
     B(iL,iR,wine.z1-3.4,wine.z1-2.4,LEDGE-2.4,LEDGE-1.7,glow);
     if(useNiche) B(nCx-nHW,nCx+nHW,wine.z0+2,wine.z0+3,nY1-2.2,nY1-1.4,glow);
     // LADDER RAIL REMOVED: it was built at z -21.6, i.e. entirely inside the run
@@ -957,8 +986,17 @@ PLAN.walls.forEach(buildWall);
     pbox(bx0+2.4,bx0+BW/2-1.2,cof.z1-1.5,cof.z1-1.1,6.4,25.6,MAT.slat,G.cab);  // panel relief
     pbox(bx0+BW/2+1.2,bx1-2.4,cof.z1-1.5,cof.z1-1.1,6.4,25.6,MAT.slat,G.cab);
     pbox(bx0+2.4,bx1-2.4,cof.z1-1.5,cof.z1-1.1,30.4,36.7,MAT.slat,G.cab);
-    pbox(bx0+BW/2-0.25,bx0+BW/2+0.25,cof.z1-1.7,cof.z1-1.2,6,26,MAT.dark,G.cab);
-    pbox(bx0+BW/2-4,bx0+BW/2+4,cof.z1-1.7,cof.z1-1.3,33.1,33.8,MAT.dark,G.cab);
+    // C-52 follow-up: both of these sat BEHIND the door face (-3.2) and rendered
+    // nothing - the bay shipped with no pulls and a wood-coloured gap where the
+    // shadow line should be. The panel reliefs beside them were brought forward
+    // to -3.1 at some point and the hardware was left behind.
+    // Shadow line: front now 0.05 proud of the door slab, 0.05 shy of the relief,
+    // so it reads as a dark reveal between the two door panels.
+    pbox(bx0+BW/2-0.25,bx0+BW/2+0.25,cof.z1-1.7,cof.z1-1.15,6,26,MAT.dark,G.cab);
+    // Bar pull: projects 0.6 past the drawer relief. It cannot go further - the
+    // slat door parks over this bay at offset 84 and its rearmost face is -1.95,
+    // so -2.5 keeps 0.55 of clearance. Any deeper pull fouls the sliding door.
+    pbox(bx0+BW/2-4,bx0+BW/2+4,cof.z1-1.7,cof.z1-0.5,33.1,33.8,MAT.dark,G.cab);
     if(i) pbox(bx0-0.4,bx0+0.4,cof.z0+1,cof.z1-1,4,38.5,MAT.rack,G.cab);
   }
   pbox(cof.x0,cof.x1,cof.z0,cof.z1,38.5,40,MAT.stone,G.cab);       // 40" landing
@@ -1032,7 +1070,11 @@ PLAN.walls.forEach(buildWall);
   // the fine 3-3/4" louvre I had.
   const dW=wine.x1-wine.x0-1, cx=(wine.x0+wine.x1)/2, DT=107, sh=6, gap=1.25;
   pbox(wine.x0+0.5,wine.x1-0.5,-1.95,-1.05,5,DT,MAT.slat,G.door);       // solid backer
-  for(let i=0;i<Math.floor((DT-13)/(sh+gap));i++)                        // wide board relief
+  // C-52 follow-up: (DT-13) gave 12 boards, topping out at y 94.25 while the top
+  // rail starts at 100.6 - a 6.3" blank band at the TOP only, while the bottom
+  // board already ran into the bottom rail. (DT-8.5) gives 13 and the band meets
+  // both rails, which is what the asymmetry showed was intended.
+  for(let i=0;i<Math.floor((DT-8.5)/(sh+gap));i++)                       // wide board relief
     box(dW-6.5,sh,0.75,MAT.oak,cx,8.5+sh/2+i*(sh+gap),-0.95,G.door);
   for(const ex of [wine.x0+2.6, wine.x1-2.6])
     box(3.6,DT-9,1.0,MAT.slat,ex,(5+DT)/2,-0.75,G.door);                 // stiles
@@ -1103,8 +1145,15 @@ PLAN.walls.forEach(buildWall);
   // dishwasher fronts and the whole run reads as one blank slab
   panelsX(196,206,4,34,-70.3);  panelsX(260,266,4,34,-70.3);
   panelsX(342,393,4,34,-70.3);
+  // C-51 couples the island to the closet+fridge block: the block truncates
+  // k_cn's west end, and k_cn is one of the two references C-46 centred the
+  // island on. The island has already been re-derived twice, so everything that
+  // rides with it now reads its position off PLAN instead of repeating a
+  // literal - when 01-plan.js moves k_isl, this file follows with no second edit.
+  const ISL=PLAN.kitchen.find(k=>k.id==='k_isl');
+  const ISLCX=ISL?(ISL.x0+ISL.x1)/2:296.5;
   panelsZ(-41.5,2,4,34,422);                            // range-leg base doors (C-44)
-  panelsZ(-32,-8,4,34,228);                             // island west end, work-top half (C-46)
+  if(ISL) panelsZ(-32,-8,4,34,ISL.x0);                  // island west end, work-top half (C-46)
 
   for(const q of PLAN.sinks){
     pbox(q.x0,q.x1,q.z0,q.z1,q.h+0.05,q.h+1.7,MAT.steel,G.kit);
@@ -1155,7 +1204,7 @@ PLAN.walls.forEach(buildWall);
   G.kit.add(g);
   // island: lower work top on the kitchen (north) side, raised bar on the far
   // side, travertine riser facing into the kitchen (zone 07)
-  (function(){const i=PLAN.kitchen.find(k=>k.id==='k_isl'); if(!i) return;
+  (function(){const i=ISL; if(!i) return;
     // sec_126/127/128, shot from the kitchen side: low work top nearest the
     // kitchen, then the harlequin travertine riser FACING the kitchen, then the
     // raised bar top, then the stools. The model had it inverted.
@@ -1181,8 +1230,8 @@ PLAN.walls.forEach(buildWall);
   // one large hammered-metal dome pendant over the island - it is the most
   // visible object in every kitchen frame and there was no light fitting at all
   const pd=new THREE.Mesh(new THREE.CylinderGeometry(3.5,12,9,22),MAT.dark);
-  pd.position.set(296.5,70.5,-14); G.kit.add(pd);            // over the island centre (C-46)
-  pbox(296,297,-14.5,-13.5,75,150,MAT.dark,G.kit);           // cord reaches the 150" vault
+  pd.position.set(ISLCX,70.5,-14); G.kit.add(pd);            // over the island centre (C-46)
+  pbox(ISLCX-0.5,ISLCX+0.5,-14.5,-13.5,75,150,MAT.dark,G.kit);// cord reaches the 150" vault
 })();
 
 /* ===================== furniture ===================== */
@@ -1213,8 +1262,16 @@ PLAN.walls.forEach(buildWall);
   }
 })();
 
-/* ===== EXISTING conditions — drop counter, sized from the architect's floorplan (C-14) =====
-   back edge 150.6" long, 24" deep, ~36" counter, 14" travertine backsplash (zone 05). */
+/* ===== EXISTING conditions — the drop counter =====
+   142" long x 24.5" deep, ~36" counter, 12" travertine backsplash (3 courses).
+   C-16, and now CONFIRMED by the scan: M-3 reads 141.3" and 144.4" against
+   Jake's tape of 142.5". That is TWO independent sources, not three — the tape,
+   and the scan read two ways (MEASURED.md: one scan read several ways is one
+   measurement stated repeatedly, not corroboration).
+   This header used to cite C-14 and give 150.6" x 24" with a 14" splash. C-14 is
+   superseded and the log says in terms "do not use its numbers" — and all three
+   of those figures contradicted the code on the very next line, which has always
+   been C-16's. The scan settles which side was right. */
 (function(){
   const L=142, D=24.5, CH=36, SPL=12, F=-19+D-1.5;   // C-16; splash is 3 courses
   // C-46: the counter is EAST-aligned — its east end meets the wall turn at
