@@ -447,11 +447,21 @@ if(location.hash){ const h=location.hash.slice(1); if(pages.includes(h)&&h!=='wi
 
   const VLABEL = {today:'Today', render:'The design', concept:'Finished look'};
   const srcOf = (area, n, vk) => 'assets/review-'+area+'-'+n+'-'+vk+'.jpg';
+  /* image keys are 'today' | 'render' | 'concept-2' … — a versioned key
+     names the exact iteration, so "which image did he mean" is never lost */
+  const labelOf = k => {
+    const m = /^(.+)-(\d+)$/.exec(k);
+    return m && VLABEL[m[1]] ? VLABEL[m[1]]+' · option '+m[2] : (VLABEL[k]||k);
+  };
 
   /* ==== the one place photos and versions are declared ====
      Photos are his walk order (IMG_3590–93 kitchen, IMG_3586–89 wine),
      all portrait 1350×1800. When a render or finished-look lands, add its
-     key to v and drop the file in assets/ — nothing else changes. */
+     key to v and drop the file in assets/ — nothing else changes.
+     A version with ITERATIONS (Jake: "multiple iterations… he can decide
+     what looks good… stacked") is declared {k:'concept', n:3} instead of
+     'concept' — files review-<area>-<n>-concept-1.jpg …-2 …-3. A card whose
+     versions are all single still renders exactly as it always has. */
   const REVIEW = [
     {area:'kitchen', label:'Kitchen', cards:[
       {n:1, title:'The sink window',   desc:'Across the island to the window and the pantry door.', ar:'3 / 4', v:['today']},
@@ -489,20 +499,30 @@ if(location.hash){ const h=location.hash.slice(1); if(pages.includes(h)&&h!=='wi
   /* ==== build the cards ==== */
   REVIEW.forEach(A => A.cards.forEach(c => {
     const id = A.area+'-'+c.n;
+    /* every version expands to image KEYS: 'today' → ['today'],
+       {k:'concept',n:3} → ['concept-1','concept-2','concept-3'].
+       Circles and the favorite are stored under the FULL key, so a mark on
+       option 2 can never be read as option 1. */
+    const vers = c.v.map(x => typeof x==='string' ? {k:x, n:1} : x);
+    const keysFor = ver => ver.n>1
+      ? Array.from({length:ver.n}, (_,i)=>ver.k+'-'+(i+1)) : [ver.k];
+    const allKeys = vers.flatMap(keysFor);
     const card = document.createElement('article');
     card.className = 'review-card';
     card.dataset.still = id; card.dataset.area = A.area;
     card.innerHTML =
       '<div class="r-stage" style="aspect-ratio:'+c.ar+'">'+
-        c.v.map((vk,i)=>'<img class="r-img'+(i?'':' on')+'" data-v="'+vk+
-          '" src="'+srcOf(A.area,c.n,vk)+'" alt="'+esc(c.title)+' — '+VLABEL[vk]+
+        allKeys.map((k,i)=>'<img class="r-img'+(i?'':' on')+'" data-k="'+k+
+          '" src="'+srcOf(A.area,c.n,k)+'" alt="'+esc(c.title)+' — '+labelOf(k)+
           '" loading="lazy" draggable="false">').join('')+
         '<canvas class="r-draw" aria-hidden="true"></canvas>'+
       '</div>'+
-      (c.v.length>1 ? '<div class="r-variants" role="group" aria-label="Version of '+
+      (vers.length>1 ? '<div class="r-variants" role="group" aria-label="Version of '+
         esc(c.title)+'">'+
-        c.v.map((vk,i)=>'<button class="v-btn'+(i?'':' on')+'" data-v="'+vk+
-          '" aria-pressed="'+(!i)+'">'+VLABEL[vk]+'</button>').join('')+'</div>' : '')+
+        vers.map((v,i)=>'<button class="v-btn'+(i?'':' on')+'" data-v="'+v.k+
+          '" aria-pressed="'+(!i)+'">'+VLABEL[v.k]+'</button>').join('')+'</div>' : '')+
+      (vers.some(v=>v.n>1) ? '<div class="r-iters" role="group" aria-label="Options for '+
+        esc(c.title)+'" hidden></div>' : '')+
       '<h3>'+esc(c.title)+'</h3><p class="desc">'+esc(c.desc)+'</p>'+
       '<div class="r-buttons">'+
         '<button class="r-ok" aria-pressed="false">This one looks good</button>'+
@@ -513,26 +533,30 @@ if(location.hash){ const h=location.hash.slice(1); if(pages.includes(h)&&h!=='wi
       '<textarea rows="3" aria-label="Changes for '+esc(c.title)+'"></textarea></label>';
     galleryEl.appendChild(card);
 
-    const s = {ok:false, note:'', marks:{}};
+    const s = {ok:false, note:'', marks:{}, fav:null};
     try{ Object.assign(s, JSON.parse(localStorage.getItem(KEY(id)) || '{}')); }catch(e){}
     if(!s.marks || typeof s.marks !== 'object' || Array.isArray(s.marks)) s.marks = {};
+    if(typeof s.fav !== 'string') s.fav = null;
     entries.push({id, title:c.title, area:A.area, areaLabel:A.label, n:c.n, s});
 
     const ok  = card.querySelector('.r-ok');
     const ta  = card.querySelector('textarea');
     const stage = card.querySelector('.r-stage');
-    const imgs = {}; card.querySelectorAll('.r-img').forEach(im=>imgs[im.dataset.v]=im);
+    const imgs = {}; card.querySelectorAll('.r-img').forEach(im=>imgs[im.dataset.k]=im);
+    const itersEl = card.querySelector('.r-iters');
     const cv  = card.querySelector('canvas.r-draw');
     const drawBtn = card.querySelector('.r-draw-btn');
     const clrBtn  = card.querySelector('.r-clear');
-    let curV = c.v[0];
+    let curVer = vers[0];
+    let curKey = keysFor(curVer)[0];
+    const lastIter = {};                 // version k → last viewed key
     ta.value = s.note || '';
 
-    /* ---- circle-on-photo, per version ----
+    /* ---- circle-on-photo, per image key ----
        Strokes are fractions of the stage box, so they replay at any size and
-       survive a reload. s.marks = { today:[strokes], render:[strokes], ... } */
+       survive a reload. s.marks = { today:[…], 'concept-2':[…], … } */
     const ctx = cv.getContext('2d');
-    const strokes = ()=> s.marks[curV] || [];
+    const strokes = ()=> s.marks[curKey] || [];
     function fit(){
       const r = stage.getBoundingClientRect();
       if(!r.width) return;
@@ -555,8 +579,8 @@ if(location.hash){ const h=location.hash.slice(1); if(pages.includes(h)&&h!=='wi
       });
       card.classList.toggle('marked', anyMarks(s));
       clrBtn.hidden = !strokes().length;
-      clrBtn.textContent = c.v.length>1
-        ? 'erase circles on “'+VLABEL[curV]+'”' : 'erase circles';
+      clrBtn.textContent = allKeys.length>1
+        ? 'erase circles on “'+labelOf(curKey)+'”' : 'erase circles';
     }
     let drawing=false, cur=null;
     const pt = e => { const r=cv.getBoundingClientRect();
@@ -564,8 +588,9 @@ if(location.hash){ const h=location.hash.slice(1); if(pages.includes(h)&&h!=='wi
     cv.addEventListener('pointerdown', e=>{
       if(!card.classList.contains('drawing')) return;
       drawing=true; cur=[pt(e)];
-      (s.marks[curV] = s.marks[curV] || []).push(cur);
-      cv.setPointerCapture(e.pointerId); e.preventDefault();
+      (s.marks[curKey] = s.marks[curKey] || []).push(cur);
+      try{ cv.setPointerCapture(e.pointerId); }catch(err){}
+      e.preventDefault();
     });
     cv.addEventListener('pointermove', e=>{
       if(!drawing) return; cur.push(pt(e)); redraw(); e.preventDefault();
@@ -574,19 +599,44 @@ if(location.hash){ const h=location.hash.slice(1); if(pages.includes(h)&&h!=='wi
     cv.addEventListener('pointerup', endStroke);
     cv.addEventListener('pointercancel', endStroke);
 
-    /* version switch — the canvas follows: each version shows only its own circles */
-    function setV(vk){
-      if(vk===curV) return;
-      curV = vk;
-      Object.entries(imgs).forEach(([k,im])=>im.classList.toggle('on', k===vk));
+    /* Switching is TWO gestures. A version pill (Today ↔ Finished look) is
+       "show me the other thing"; an option pill (option 1 ↔ 2) is "show me
+       the other choice" — that one snaps (.fast) because it is a comparison.
+       The canvas follows either way: each image shows only its own circles. */
+    function syncIters(){
+      if(!itersEl) return;
+      const ks = keysFor(curVer);
+      if(ks.length < 2){ itersEl.hidden = true; itersEl.innerHTML = ''; return; }
+      itersEl.hidden = false;
+      itersEl.innerHTML = ks.map(k=>
+        '<button class="i-btn'+(k===curKey?' on':'')+'" data-k="'+k+
+        '" aria-pressed="'+(k===curKey)+'">Option '+k.split('-').pop()+'</button>').join('')+
+        '<button class="r-fav'+(s.fav===curKey?' on':'')+'" aria-pressed="'+(s.fav===curKey)+
+        '">'+(s.fav===curKey?'★ My favorite':'☆ My favorite')+'</button>';
+      itersEl.querySelectorAll('.i-btn').forEach(b=>
+        b.addEventListener('click', ()=>setKey(b.dataset.k, true)));
+      itersEl.querySelector('.r-fav').addEventListener('click', ()=>{
+        s.fav = (s.fav===curKey ? null : curKey);
+        save(); syncIters();
+      });
+    }
+    function setKey(k, fast){
+      curKey = k; lastIter[curVer.k] = k;
+      stage.classList.toggle('fast', !!fast);
+      Object.entries(imgs).forEach(([kk,im])=>im.classList.toggle('on', kk===k));
       card.querySelectorAll('.v-btn').forEach(b=>{
-        const on = b.dataset.v===vk;
+        const on = b.dataset.v===curVer.k;
         b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
       });
-      redraw();
+      syncIters(); redraw();
     }
     card.querySelectorAll('.v-btn').forEach(b=>
-      b.addEventListener('click', ()=>setV(b.dataset.v)));
+      b.addEventListener('click', ()=>{
+        const ver = vers.find(v=>v.k===b.dataset.v);
+        if(!ver) return;
+        curVer = ver;
+        setKey(lastIter[ver.k] || keysFor(ver)[0], false);
+      }));
 
     drawBtn.addEventListener('click', ()=>{
       const on = !card.classList.contains('drawing');
@@ -595,7 +645,7 @@ if(location.hash){ const h=location.hash.slice(1); if(pages.includes(h)&&h!=='wi
       drawBtn.textContent = on ? 'Done circling' : 'Circle on the photo';
       if(on) fit();
     });
-    clrBtn.addEventListener('click', ()=>{ delete s.marks[curV]; save(); });
+    clrBtn.addEventListener('click', ()=>{ delete s.marks[curKey]; save(); });
 
     const paint = ()=>{
       ok.classList.toggle('on', !!s.ok);
@@ -613,10 +663,10 @@ if(location.hash){ const h=location.hash.slice(1); if(pages.includes(h)&&h!=='wi
     ta.addEventListener('blur',  ()=>document.body.classList.remove('typing'));
     Object.values(imgs).forEach(im=>{
       if(im.complete) fit();
-      else im.addEventListener('load', ()=>{ if(im.dataset.v===curV) fit(); });
+      else im.addEventListener('load', ()=>{ if(im.dataset.k===curKey) fit(); });
     });
     addEventListener('resize', fit);
-    paint(); redraw();
+    syncIters(); paint(); redraw();
   }));
 
   /* ==== area tabs ==== */
@@ -648,15 +698,24 @@ if(location.hash){ const h=location.hash.slice(1); if(pages.includes(h)&&h!=='wi
         Object.entries(e.s.marks).forEach(([vk,st])=>{
           if(!st || !st.length) return;
           body += '  [circled '+st.length+' spot'+(st.length>1?'s':'')+
-                  ' on the “'+(VLABEL[vk]||vk)+'” image — see attached]\n';
+                  ' on the “'+labelOf(vk)+'” image — see attached]\n';
         });
+        if(e.s.fav) body += '  FAVORITE: '+labelOf(e.s.fav)+'\n';
       });
     }
     if(oks.length){
       body += '\nLOOKS GOOD:\n';
-      oks.forEach(e=>{ body += '- ['+e.areaLabel+'] '+e.title+'\n'; });
+      oks.forEach(e=>{ body += '- ['+e.areaLabel+'] '+e.title+
+        (e.s.fav ? ' — favorite: '+labelOf(e.s.fav) : '')+'\n'; });
     }
-    if(!flagged.length && !oks.length) body += '\n(nothing marked yet)\n';
+    /* a favorite alone is real feedback — never let it vanish from the email */
+    const favOnly = entries.filter(e=>e.s.fav && !e.s.ok && !isFlagged(e));
+    if(favOnly.length){
+      body += '\nFAVORITES PICKED:\n';
+      favOnly.forEach(e=>{ body += '- ['+e.areaLabel+'] '+e.title+
+        ' — '+labelOf(e.s.fav)+'\n'; });
+    }
+    if(!flagged.length && !oks.length && !favOnly.length) body += '\n(nothing marked yet)\n';
     return {flagged, oks, date, body, who};
   }
 
@@ -698,16 +757,19 @@ if(location.hash){ const h=location.hash.slice(1); if(pages.includes(h)&&h!=='wi
 
   function sync(){
     const {flagged, oks, date, body} = summary();
+    const favs = entries.filter(e=>e.s.fav).length;
     const untouched = REVIEW.filter(A =>
-      entries.filter(e=>e.area===A.area).every(e=>!e.s.ok && !isFlagged(e)))
+      entries.filter(e=>e.area===A.area)
+             .every(e=>!e.s.ok && !isFlagged(e) && !e.s.fav))
       .map(A=>A.label);
     let t;
-    if(!flagged.length && !oks.length){
+    if(!flagged.length && !oks.length && !favs){
       t = 'Mark the pictures, then send';
     }else{
-      t = (flagged.length ? flagged.length+(flagged.length===1?' change':' changes') : '')+
-          (flagged.length && oks.length ? ' · ' : '')+
-          (oks.length ? oks.length+' approved' : '');
+      t = [flagged.length ? flagged.length+(flagged.length===1?' change':' changes') : '',
+           oks.length ? oks.length+' approved' : '',
+           favs ? favs+(favs===1?' favorite':' favorites') : '']
+          .filter(Boolean).join(' · ');
       if(untouched.length) t += ' · '+untouched.join(' & ')+' still to look at';
     }
     countEl.textContent = t;

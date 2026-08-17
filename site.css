@@ -805,3 +805,35 @@ body.typing #review-summary{opacity:.14; pointer-events:none}
   .area-tabs{gap:8px}
   .area-tab{padding:13px 10px; font-size:16px}
 }
+
+/* --- option strip: choosing BETWEEN finished-look iterations.
+   Smaller pills than the version row — a different gesture (compare, not
+   switch modes) gets a visibly different control. --- */
+.r-iters{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:10px 0 0}
+.r-iters[hidden]{display:none}
+.i-btn{
+  padding:11px 16px; border-radius:999px; font-size:15px; font-weight:600;
+  color:var(--muted); background:rgba(245,241,232,.7);
+  border:1px solid var(--hair);
+  transition:background .2s var(--ease), color .2s var(--ease),
+             border-color .2s var(--ease);
+}
+.i-btn:hover{border-color:rgba(29,26,22,.3); color:var(--ink)}
+.i-btn.on{background:var(--area-acc,var(--alder));
+  border-color:var(--area-acc,var(--alder)); color:var(--ivory)}
+/* "I like this one" — the lightest possible preference signal */
+.r-fav{
+  margin-left:auto; padding:11px 16px; border-radius:999px;
+  font-size:15px; font-weight:600; color:var(--muted);
+  background:none; border:1px dashed var(--hair);
+  transition:color .2s var(--ease), border-color .2s var(--ease),
+             background .2s var(--ease);
+}
+.r-fav:hover{color:var(--ink); border-color:rgba(29,26,22,.3)}
+.r-fav.on{color:var(--bronze); border:1px solid var(--gold);
+  background:rgba(201,176,122,.16)}
+/* option flips are comparisons — snap, don't glide */
+.r-stage.fast .r-img{transition-duration:.15s}
+@media (max-width:640px){
+  .r-fav{margin-left:0; flex:1 1 100%; text-align:center}
+}
