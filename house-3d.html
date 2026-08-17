@@ -1139,13 +1139,35 @@ PLAN.walls.forEach(buildWall);
 
 /* ===================== kitchen ===================== */
 (function(){
+  // ===== C-62: the kitchen had no before/after at all =====================
+  // setState() toggles G.cab/G.door/G.wineN/G.wineM/G.exist and never touches
+  // G.kit, so every kitchen change rendered identically in both states - the
+  // Kitchen tab was structurally incapable of showing a proposal. Same family
+  // as C-33 and C-52: authored, never looked at, failed silently.
+  //
+  // These are children OF G.kit on purpose, not siblings:
+  //   · buildSolids() traverses a FIXED list [walls,cab,kit,furn,door,exist],
+  //     and traverse() is recursive - so nesting keeps walk-mode collision
+  //     working with no change to that function.
+  //   · three.js visibility is hierarchical, so hiding the group hides its
+  //     subtree.
+  // Defaults below reproduce TODAY'S appearance exactly (fridge shown, new
+  // counter hidden), so this file is inert until 12-engine.js:50 is patched.
+  // Patch sent to Hub separately - 08 must not reach into an orphan file.
+  G.kitOld=new THREE.Group(); G.kitOld.visible=true;   // BEFORE-only
+  G.kitNew=new THREE.Group(); G.kitNew.visible=false;  // AFTER-only
+  G.kit.add(G.kitOld); G.kit.add(G.kitNew);
+
   for(const k of PLAN.kitchen){
-    pbox(k.x0,k.x1,k.z0,k.z1,0,k.h,MAT.counter,G.kit);
+    // the fridge is BEFORE-only: C-51 relocates it to the north wall, and
+    // Jake's own enhanced images show this corner with counter running through.
+    const kg = (k.id==='k_frdg') ? G.kitOld : G.kit;
+    pbox(k.x0,k.x1,k.z0,k.z1,0,k.h,MAT.counter,kg);
     if(k.oh){                                     // FIX(9) overhang free edges only
       const o=k.oh;
       const x0=(o==='all'||o==='w')?k.x0-1:k.x0, x1=(o==='all')?k.x1+1:k.x1;
       const z0=(o==='all')?k.z0-1:k.z0,          z1=(o==='all'||o==='s')?k.z1+1:k.z1;
-      pbox(x0,x1,z0,z1,k.h,k.h+1.5,MAT.stone,G.kit);
+      pbox(x0,x1,z0,z1,k.h,k.h+1.5,MAT.stone,kg);
     }
   }
   // raised-panel relief on the cabinet faces - flat slabs read as blockout, and
@@ -1170,22 +1192,25 @@ PLAN.walls.forEach(buildWall);
       if(i) pbox(x0+i*bw-0.4,x0+i*bw+0.4,zf,zf+0.6,y0,y1,w||MAT.counter,G.kit);
     }
   };
-  const panelsZ=(z0,z1,y0,y1,xf,w)=>{
+  // gp: optional target group. Defaults to G.kit so every existing call is
+  // unchanged; C-62's after-state counter passes G.kitNew.
+  const panelsZ=(z0,z1,y0,y1,xf,w,gp)=>{
+    const g=gp||G.kit;
     const n=Math.max(1,Math.round((z1-z0)/24)), bw=(z1-z0)/n, base=(y1-y0)>26;
     for(let i=0;i<n;i++){
       const a=z0+i*bw+1.4, b=z0+(i+1)*bw-1.4, czb=(a+b)/2;
       if(base){
-        pbox(xf-0.5,xf,a,b,y1-8.4,y1-1.4,MAT.panel,G.kit);
-        pbox(xf-0.5,xf,a,czb-0.5,y0+1.4,y1-9.6,MAT.panel,G.kit);
-        pbox(xf-0.5,xf,czb+0.5,b,y0+1.4,y1-9.6,MAT.panel,G.kit);
-        pbox(xf-0.9,xf-0.4,czb-4,czb+4,y1-5.4,y1-4.4,MAT.orb,G.kit);
+        pbox(xf-0.5,xf,a,b,y1-8.4,y1-1.4,MAT.panel,g);
+        pbox(xf-0.5,xf,a,czb-0.5,y0+1.4,y1-9.6,MAT.panel,g);
+        pbox(xf-0.5,xf,czb+0.5,b,y0+1.4,y1-9.6,MAT.panel,g);
+        pbox(xf-0.9,xf-0.4,czb-4,czb+4,y1-5.4,y1-4.4,MAT.orb,g);
         for(const kz of [czb-3,czb+3])
-          pbox(xf-1.1,xf-0.4,kz-0.6,kz+0.6,y1-13,y1-11.6,MAT.orb,G.kit);
+          pbox(xf-1.1,xf-0.4,kz-0.6,kz+0.6,y1-13,y1-11.6,MAT.orb,g);
       }else{
-        pbox(xf-0.5,xf,a,b,y0+1.4,y1-1.4,MAT.panel,G.kit);
-        pbox(xf-0.9,xf-0.4,czb-4,czb+4,y0+1.6,y0+2.6,MAT.orb,G.kit);
+        pbox(xf-0.5,xf,a,b,y0+1.4,y1-1.4,MAT.panel,g);
+        pbox(xf-0.9,xf-0.4,czb-4,czb+4,y0+1.6,y0+2.6,MAT.orb,g);
       }
-      if(i) pbox(xf-0.6,xf,z0+i*bw-0.4,z0+i*bw+0.4,y0,y1,w||MAT.counter,G.kit);
+      if(i) pbox(xf-0.6,xf,z0+i*bw-0.4,z0+i*bw+0.4,y0,y1,w||MAT.counter,g);
     }
   };
   // skip the appliance bays, otherwise the panels render in front of the
@@ -1231,8 +1256,18 @@ PLAN.walls.forEach(buildWall);
   // so k_frdg's z1 went 47 -> 50 and these follow it. It grows SOUTH: growing
   // north would push back over z=2 into k_ce and re-create the exact clipping
   // Jake reported in C-44. Crown keeps its 1.4" south overhang (50 + 1.4).
-  pbox(422,447,2,50,84,100,MAT.alder,G.kit);          // over the fridge
-  pbox(420.6,447,2,51.4,100,103.5,MAT.alder,G.kit);
+  // C-62: BEFORE-only - the fridge surround leaves with the fridge.
+  pbox(422,447,2,50,84,100,MAT.alder,G.kitOld);       // over the fridge
+  pbox(420.6,447,2,51.4,100,103.5,MAT.alder,G.kitOld);
+  // C-62 AFTER: fridge gone, k_ce runs continuously south through the vacated
+  // footprint. Same 25" depth, same h=36, same 1" west overhang as k_ce's
+  // oh:'w', and the same west-facing door panels - so the two read as one run.
+  // Butts k_ce at z=2 rather than overlapping it (C-44's lesson).
+  // Nothing is built ABOVE it: what replaces the fridge's tall surround is a
+  // C-51 design question still blocked on the block and skinny-cabinet widths.
+  pbox(422,447,2,50,0,36,MAT.counter,G.kitNew);       // counter body
+  pbox(421,447,2,50,36,37.5,MAT.stone,G.kitNew);      // granite, west overhang
+  panelsZ(2,50,4,34,422,null,G.kitNew);               // door panels, west face
   // battens sat 0.4" inside the upper boxes with their bottoms exactly on the
   // cabinet bottom at y=54 - three coplanar downward faces, visible from below.
   // Bottom nudged to 54.25 (C-49's beam-top precedent) rather than moving them
@@ -1247,8 +1282,38 @@ PLAN.walls.forEach(buildWall);
   g.position.set(s2.cx,0,s2.cz); g.rotation.y=-s2.rot*Math.PI/180;
   // body 1.5" narrower than the 48" gap — a real slide-in reveal, and the
   // rotated top can no longer touch the flanking granite (C-44 review round)
-  box(s2.w-1.5,s2.h,s2.d,MAT.steel,0,s2.h/2,0,g);
-  box(s2.w-1.5,1.5,s2.d,MAT.dark,0,s2.h+0.75,0,g);
+  // Photo pass, review-kitchen-3: this is a DCS-class 48" pro range and the
+  // model was a plain steel box with a dark slab on top - the single most
+  // looked-at object in the room rendering as a blockout. Detail below is read
+  // off the photograph; NO dimension moves (still s2.w-1.5 x s2.h x s2.d).
+  // Local frame of g: +x along the range width, +z is the FRONT (into the room).
+  const RW=s2.w-1.5, RH=s2.h, RD=s2.d, FR=RD/2;       // front face at local +z
+  box(RW,RH,RD,MAT.steel,0,RH/2,0,g);                  // body
+  box(RW-1.5,4,1.2,MAT.dark,0,2,FR-0.2,g);             // recessed toe kick
+  box(RW,1.5,RD,MAT.dark,0,RH+0.75,0,g);               // black cooktop slab
+  // six burner grates over the left 2/3, griddle plate on the right - the
+  // layout in the photograph. Grates sit ON the cooktop, not in it.
+  for(const bx of [-18.5,-11,-3.5]) for(const bz of [-5.5,5.5])
+    box(6.4,0.9,6.4,MAT.blk,bx,RH+1.95,bz,g);
+  box(13,0.7,15,MAT.dark,10.5,RH+1.85,0,g);            // griddle
+  // stainless backguard - low, it does not reach the medallion
+  box(RW,5,0.8,MAT.steel,0,RH+4,-FR+0.4,g);
+  // control band + knobs across the front, just under the cooktop
+  box(RW-1,4.2,0.7,MAT.steel,0,RH-2.6,FR+0.35,g);
+  for(let i=0;i<7;i++){
+    const kx=-19.5+i*6.5;
+    const kn=new THREE.Mesh(new THREE.CylinderGeometry(1.15,1.15,1.1,14),MAT.blk);
+    kn.rotation.x=Math.PI/2; kn.position.set(kx,RH-2.6,FR+1.1); g.add(kn);
+  }
+  // two oven doors, wide left + narrow right, each with a dark glass window
+  // and a full-width tubular handle. Doors stand 0.6" proud of the body face.
+  for(const [dx,dw] of [[-11.6,22.4],[10.9,20.4]]){
+    box(dw,26,0.7,MAT.steel,dx,17,FR+0.35,g);          // door slab
+    box(dw-6,15,0.5,MAT.blk,dx,18,FR+0.75,g);          // glass
+    box(dw-3,1.1,1.1,MAT.steel,dx,29.6,FR+1.3,g);      // handle bar
+    for(const sx of [dx-(dw-3)/2,dx+(dw-3)/2])         // handle standoffs
+      box(0.9,1.9,0.9,MAT.steel,sx,29.6,FR+0.9,g);
+  }
   // trapezoidal canted hood - WIDER than the range at the bottom (sec_124),
   // tapering up. It used to be 44" wide against a 48" range, and centred on the
   // wall line so a third of it was inside the wall.
@@ -1262,8 +1327,23 @@ PLAN.walls.forEach(buildWall);
   const hg=new THREE.Mesh(hgeo,hmat); hg.position.set(0,76,-1); hood.add(hg);
   box(57,2.6,26,MAT.counter,0,65.2,-1,hood);                // moulded bottom band
   box(50,1.2,22,MAT.steel,0,63.8,-1,hood);                  // stainless liner
-  box(46,1.1,1.1,MAT.beam,0,79,7.2,hood);                   // moulded band on the canted face
-  box(38,1.1,1.1,MAT.beam,0,73,9.6,hood);
+  // Photo pass: the real hood carries RAISED PANELS in its canted face, not the
+  // two thin strips that were here. Those strips also sat within a hair of the
+  // skin (0.22" and 1.02" proud) because they were placed by eye against a
+  // TAPERED face - the same class of mistake I mis-diagnosed as "buried" during
+  // the audit. So the face is solved rather than guessed:
+  //   r(y)  = 38.2 - 17*(y-66)/20        the frustum's radius at height y
+  //   face z = -1 + r(y)*0.7071*0.444    across-flats, squashed, hood centre -1
+  // Every panel is placed 0.5" proud of that surface and rotated to match its
+  // cant (dz/dy = -0.267), so the standoff is uniform top to bottom.
+  const hFaceZ=y=>-1+(38.2-17*(y-66)/20)*0.7071*0.444;
+  const hCant=-Math.atan(0.267);
+  for(const px of [-12,0,12]){
+    const p=box(10,8,0.8,MAT.beam,px,76,hFaceZ(76)+0.5,hood);
+    p.rotation.x=hCant;
+  }
+  const hb=box(46,1.6,1.0,MAT.beam,0,69.5,hFaceZ(69.5)+0.5,hood);  // moulding under
+  hb.rotation.x=hCant;
   G.kit.add(g);
   // island: lower work top on the kitchen (north) side, raised bar on the far
   // side, travertine riser facing into the kitchen (zone 07)
@@ -1752,7 +1832,16 @@ function applyFin(i){
   MAT.oak.color.setHex(f.brd).convertSRGBToLinear();   // the door's board relief
   document.getElementById('bFin').textContent='Finish: '+f.n;
 }
-for(const k of ['counter','alder','panel','table']) MAT[k].color.convertSRGBToLinear();
+// C-63: 'beam' added 17 Aug. MAT.beam (0x241609, near-black per C-25) was decoded
+// NOWHERE — not here, not in applyFin — so the shader received its sRGB bytes as
+// linear and a near-black stained timber arrived as mid-brown: R 8.0x, G 10.8x,
+// B 12.9x too bright. Diagnosed by Walls, arithmetic re-derived by Hub.
+// ⚠ MAT.beam is shared: dining beams + chamfer drawer faces + bronze listello (06),
+// hood moulding + pot-rack uprights (08), AND the dining credenza (09). All darken
+// together, which is correct per C-25 but visible in three lanes' files.
+// ⚠ 'base' and 'orb' are ALSO undecoded. Deliberately NOT swept in — there is
+// evidence for beam and none for those. See C-63.
+for(const k of ['counter','alder','panel','table','beam']) MAT[k].color.convertSRGBToLinear();
 document.getElementById('bReal').onclick=function(){
   REALON=!REALON; this.classList.toggle('on',REALON); applyReal(REALON);
 };
