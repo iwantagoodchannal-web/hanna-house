@@ -131,6 +131,10 @@ const KSOF = H;  // pantry-soffit datum for the kitchen rework's uppers (M-15):
 // what changed is that it is now named and lives in one place.
 // ⚠ Not every literal 150 in parts/ is this height — 09-dining's 150.5/150.6 are
 // x-coordinates, 12-engine's are camera targets. Grep with care.
+// C-75 addendum: the pantry slider's ONE fact. w_pe.z1, w_peS.z0 and
+// wall45sq.door all DERIVE from this — never write -59.5 anywhere else.
+// ⚠ w is a CEILING (C-75): at 33.5" no slider of any type fits the wall.
+const SLIDER = {z0:-26.5, w:33};  SLIDER.z1 = SLIDER.z0 - SLIDER.w;   // -59.5
 const PLAN = {
   cabinet:[
     // 17" case + a 2" door slot = Jake's 19" overall. The door used to be built
@@ -176,7 +180,9 @@ const PLAN = {
     // door is the measured swing on the chamfer (wall45d). D18 was the SAME door
     // mis-hosted here by the disproven frame (C-50: "was a swing leaf"); its
     // slider successor lives on the PROPOSED extended wall (wall45sq below).
-    {id:'w_pe',  x0:186.2,  x1:192.3, z0:-95.5, z1:-52.9, tint:0xdfd8c9},
+    // C-75 addendum: z1 DERIVES from SLIDER — the wall south of the split is
+    // w_peS (existing only, below), so the proposed opening never cuts this.
+    {id:'w_pe',  x0:186.2,  x1:192.3, z0:-95.5, z1:SLIDER.z1, tint:0xdfd8c9},
     // ONE continuous north wall: bathroom, pantry and the kitchen sink leg all
     // share it. The old k_n / k_nw jog was a fabrication.
     {id:'w_back',x0:-110.4, x1:174.1, z0:-101.5,z1:-95.5},
@@ -226,7 +232,12 @@ const PLAN = {
             // C-75 (by delegation): concealed top-hung track, opening HARD
             // against the corner end, leaf parks north, alder slab (C-21).
             // ⚠ w:33 is a CEILING — at 33.5" no slider of any type fits (C-75).
-            door:{w:33, z0:-26.5, z1:-59.5, type:'slider-concealed', park:'north'}},
+            door:{z0:SLIDER.z0, z1:SLIDER.z1, w:SLIDER.w,
+                  type:'slider-concealed', park:'north'}},
+  // C-75 addendum: the 6.6" of old pantry east wall that survives ONLY in the
+  // existing state (the proposal's opening swallows it). existOnly like wall45d;
+  // Walls builds it into G.exist. Extent derives from SLIDER — one fact.
+  w_peS:{id:'w_peS', x0:186.2, x1:192.3, z0:SLIDER.z1, z1:-52.9, existOnly:true},
   rooms:[
     {id:'bath', l:'BATHROOM', x0:0,     x1:75.75, z0:-101.5,z1:-19},     // 6'-3-3/4" x 5'-10-1/2"
     {id:'pant', l:'PANTRY',   x0:81.82, x1:186.2, z0:-101.5,z1:-19},     // C-74: east wall measured at ~186 (was circular 86.2 wide)
@@ -1110,6 +1121,26 @@ PLAN.walls.forEach(buildWall);
                    :pbox(p.x0,p.x1,p.z1,p.z1+T,0,B,MAT.base,G.cab);
     b1.userData=b2.userData={y0:0,y1:B};
   }
+})();
+
+// C-75: w_peS — the 6.6" of pantry east wall SOUTH of the slider's north edge.
+// EXISTING STATE ONLY. The proposed slider's opening runs through this stretch,
+// so if this stub existed in the proposal the door would be cut through solid
+// wall; and if it did not exist in the EXISTING state, the pantry's east wall
+// would have a 6.6" hole in it — which is precisely the state the model was in
+// between Hub's PLAN split and this commit, deliberately and briefly.
+// Its extent derives from SLIDER (01-plan.js), so resizing the door moves this
+// wall with it rather than quietly reopening the old one.
+// The tint is read off w_pe rather than repeated: this IS a piece of that wall,
+// and a second literal here is a colour seam waiting for someone to retint one
+// of them. Same reason SLIDER exists at all.
+(function(){
+  const p=PLAN.w_peS, B=5.5, T=0.7;
+  const src=PLAN.walls.find(w=>w.id==='w_pe');
+  const m=pbox(p.x0,p.x1,p.z0,p.z1,0,H,TINT(src.tint),G.exist); m.userData={y0:0,y1:H};
+  const b1=pbox(p.x0-T,p.x0,p.z0,p.z1,0,B,MAT.base,G.exist);
+  const b2=pbox(p.x1,p.x1+T,p.z0,p.z1,0,B,MAT.base,G.exist);
+  b1.userData=b2.userData={y0:0,y1:B};
 })();
 /* ===================== the run: wine + coffee ===================== */
 (function(){
@@ -2818,4 +2849,4 @@ tick();
 </script>
 </body>
 </html>
-<!-- build:d24074f -->
+<!-- build:b7ce5bc -->
