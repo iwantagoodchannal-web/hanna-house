@@ -740,10 +740,15 @@ function doorSet(w,alongZ,o){
     const hx=side>0?lb-3.5:la+3.5;
     if(alongZ) pbox(th+1.95,th+3.8,hx-0.7,hx+0.7,35,37,MAT.orb,grp);
     else       pbox(hx-0.7,hx+0.7,th+1.95,th+3.8,35,37,MAT.orb,grp);
+    // Hinge backs sit 0.05" INSIDE the leaf's own back plane. Built flush at
+    // th+0.2 they were coplanar with it — orb against alder, 2 in2 a hinge,
+    // facing the wall across the 0.2" standoff, so it only ever showed at a
+    // grazing angle. Same rule as the leaf panels above; this is the last
+    // different-material coincidence left in the door assembly.
     for(const hy of [8,HD/2,HD-8]){
       const p0=side>0?la-0.5:lb-0.5, p1=side>0?la+0.5:lb+0.5;
-      if(alongZ) pbox(th+0.2,th+2.3,p0,p1,hy-2,hy+2,MAT.orb,grp);
-      else       pbox(p0,p1,th+0.2,th+2.3,hy-2,hy+2,MAT.orb,grp);
+      if(alongZ) pbox(th+0.25,th+2.3,p0,p1,hy-2,hy+2,MAT.orb,grp);
+      else       pbox(p0,p1,th+0.25,th+2.3,hy-2,hy+2,MAT.orb,grp);
     }
   };
   leaf(o.a,o.b,G.leafC);                                       // closed, in the opening
