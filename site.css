@@ -732,17 +732,21 @@ body.typing #review-summary{opacity:.14; pointer-events:none}
    viewport. The width formula keeps the 3:4 stage on screen; the ratio must
    always equal the photo's so circle coordinates map exactly (object-fit
    must never crop). */
-.area-tabs, .review-card{
-  width:min(100%, calc((100vh - 240px) * .75), 940px);
-  margin-left:0; margin-right:0;
+/* v3 (Jake: "make sure the review area stays centered"): text and photos now
+   share ONE column width, centered on the screen. His two reports were the
+   same tension — photos centered under wider left-aligned text read as
+   "pushed right"; photos left-aligned under wider text read as off-centre.
+   Equal widths dissolve it: aligned AND centered. The 340px floor guards
+   short-landscape windows where the vh formula would collapse. */
+.review-page{--rev-col:min(100%, max(340px, calc((100vh - 240px) * .75)), 940px)}
+.review-intro, .area-tabs, .review-card{
+  width:var(--rev-col);
+  margin-left:auto; margin-right:auto;
 }
 
 /* --- the two clickers at the top --- */
-/* the tabs live OUTSIDE the 980px gallery column, so they need the column's
-   left offset by hand: (page width − 980)/2, floored at the page edge */
 .area-tabs{
   display:flex; gap:10px;
-  margin-left:max(0px, calc((100% - 980px)/2));
   margin-bottom:clamp(24px,4vh,40px);
 }
 .area-tab{
@@ -836,4 +840,69 @@ body.typing #review-summary{opacity:.14; pointer-events:none}
 .r-stage.fast .r-img{transition-duration:.15s}
 @media (max-width:640px){
   .r-fav{margin-left:0; flex:1 1 100%; text-align:center}
+}
+
+/* ============================================================
+   DECIDE — Jake's response queue at #decide. Shares the review
+   page's centered column (--rev-col). One card per question:
+   tap an answer pill, or type; saved locally; one Send.
+   ============================================================ */
+#decide-updated{margin-top:10px; font-size:13px}
+.d-group{
+  font-family:var(--display); font-weight:400;
+  font-size:clamp(24px,3vw,32px); line-height:1.1;
+  width:var(--rev-col); margin:clamp(30px,5vh,46px) auto 10px;
+}
+.d-card{
+  width:var(--rev-col); margin:0 auto 14px; padding:16px 18px 14px;
+  background:rgba(255,255,255,.6); border:1px solid var(--hair);
+  border-radius:16px;
+}
+.d-card.answered{border-color:var(--alder); background:#fffdf8}
+.d-q{margin:0; font-size:17.5px; font-weight:600; color:var(--ink); line-height:1.45}
+.d-why{margin:6px 0 0; font-size:14.5px; color:var(--muted)}
+.d-opts{display:flex; flex-wrap:wrap; gap:8px; margin-top:12px}
+.d-opt{
+  padding:11px 16px; border-radius:999px; font-size:15px; font-weight:600;
+  color:var(--muted); background:rgba(245,241,232,.7);
+  border:1px solid var(--hair);
+  transition:background .2s var(--ease), color .2s var(--ease),
+             border-color .2s var(--ease);
+}
+.d-opt:hover{border-color:rgba(29,26,22,.3); color:var(--ink)}
+.d-opt.on{background:var(--alder); border-color:var(--alder); color:var(--ivory)}
+.d-note{display:block; margin-top:10px}
+.d-note span{display:block; font-size:13.5px; color:var(--muted); margin-bottom:6px}
+.d-note textarea{
+  width:100%; font:inherit; font-size:16px; color:var(--ink);
+  padding:10px 12px; border-radius:10px; resize:vertical;
+  border:1px solid var(--hair); background:rgba(255,255,255,.8);
+}
+.d-note textarea:focus{outline:none; border-color:var(--alder)}
+/* the send pill — same species as the review one */
+#decide-summary{
+  position:fixed; left:50%; bottom:18px; transform:translateX(-50%);
+  z-index:45; width:max-content; max-width:calc(100vw - 28px);
+  display:flex; align-items:center; flex-wrap:wrap; gap:8px 14px;
+  padding:11px 14px 11px 11px; border-radius:999px;
+  background:rgba(245,241,232,.9);
+  backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+  border:1px solid var(--hair); box-shadow:0 8px 28px rgba(29,26,22,.13);
+  transition:opacity .25s var(--ease);
+}
+body.typing #decide-summary{opacity:.14; pointer-events:none}
+#decide-summary .review-status{flex-basis:100%; text-align:center; margin:0}
+#decide-summary .review-status:empty{display:none}
+#decide-send{
+  padding:12px 26px; border-radius:999px; border:1px solid var(--alder);
+  font-size:15.5px; font-weight:600; letter-spacing:.01em;
+  background:var(--alder); color:var(--ivory);
+  box-shadow:0 2px 10px rgba(138,90,52,.22);
+  transition:transform .25s var(--ease), background .25s var(--ease);
+}
+#decide-send:hover{transform:translateY(-1px); background:#7c502d}
+#decide-send[disabled]{opacity:.55; transform:none}
+@media (max-width:640px){
+  #decide-summary{left:14px; right:14px; transform:none; width:auto;
+    max-width:none; justify-content:center; border-radius:22px}
 }

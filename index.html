@@ -167,7 +167,10 @@
       </dl>
     </div>
     <footer>
-      <p>Modelled from the house itself — 148 video frames, 50 logged corrections, one tape measure.</p>
+      <!-- no live counts here: a number that grows hourly rots in static copy
+           (the "50 corrections" sat here while the ledger passed 70) -->
+      <p>Modelled from the house itself — 148 video frames, one tape measure,
+         one laser scan, and every correction Jake could throw at it.</p>
       <p class="dim">The Hanna House · 2026</p>
     </footer>
   </section>
@@ -235,6 +238,183 @@
     <a class="review-alt" id="review-email" href="#">or send as an email</a>
     <button class="review-alt" id="review-copy">copy my notes</button>
   </div>
+</main>
+
+<!-- ================= DECIDE — Jake's response queue =================
+     No tab on purpose: open hannahouse.netlify.app/#decide directly.
+     Data comes from decisions.json when deployed (Router maintains it),
+     falling back to the inline block below. -->
+<main id="page-decide" class="page review-page decide-page" hidden>
+  <header class="review-intro">
+    <p class="eyebrow">For Jake</p>
+    <h2>Waiting on you.</h2>
+    <p class="lede">Every question the build has for you, one tap each.
+       Answers save on this phone as you go; press <strong>Send my answers</strong>
+       when you're done.</p>
+    <p class="dim" id="decide-updated"></p>
+  </header>
+
+  <form name="decisions" data-netlify="true" netlify-honeypot="bot-field" hidden>
+    <input type="text" name="submitted"><input type="text" name="answered">
+    <textarea name="answers"></textarea>
+    <input type="text" name="bot-field">
+  </form>
+
+  <div id="decide-list"></div>
+
+  <div id="decide-summary" role="region" aria-label="Send answers">
+    <button id="decide-send">Send my answers</button>
+    <span class="review-count" id="decide-count"></span>
+    <p class="review-status" id="decide-status" role="status"></p>
+    <button class="review-alt" id="decide-copy">copy my answers</button>
+  </div>
+
+  <script id="decisions-data" type="application/json">
+  {
+    "updated": "17 Aug, evening — synced at the pre-deploy window; pantry-corner struck (answered by construction, C-74)",
+    "groups": [
+      {
+        "title": "Decisions",
+        "items": [
+          {
+            "id": "vault-slope",
+            "q": "The kitchen vault is sloped in real life — model the slope?",
+            "why": "The model holds it flat today; the scan measured the slope.",
+            "options": [
+              "Model the slope",
+              "Leave it flat for now"
+            ]
+          },
+          {
+            "id": "block-width",
+            "q": "The new closet + fridge block — how wide?",
+            "why": "The two candidates from your sketch.",
+            "options": [
+              "66 inches",
+              "86 — out to the window jamb"
+            ]
+          },
+          {
+            "id": "skinny-cab",
+            "q": "The skinny cabinet beside the fridge — how wide?",
+            "options": [
+              "18 inches",
+              "21.1 — the full space"
+            ]
+          },
+          {
+            "id": "ninety-four",
+            "q": "The ~94 inch measurement you gave — width or depth?",
+            "options": [
+              "Width",
+              "Depth"
+            ]
+          },
+          {
+            "id": "drawer-fronts",
+            "q": "Are the drawer fronts going back on the existing counter?",
+            "options": [
+              "Yes, back on",
+              "No, staying off"
+            ]
+          },
+          {
+            "id": "long-wall-tape",
+            "q": "What did the long-wall tape measure read? (The photo shows the span, not the number.)",
+            "options": []
+          },
+          {
+            "id": "medallion",
+            "q": "The tile medallion above the range — keep it, or let it go?",
+            "why": "You generated the new kitchen style both ways: one with the diamond medallion above the range, one without. Both are on the site. The medallion is in the house today and it survives into the first version; the second drops it for plain stacked tile. (If you didn't mean these as alternatives, say so and we'll keep whichever matches the rest.) Default if you say nothing: keep it — it was deleted once by inference and restored by your own correction.",
+            "options": [
+              "Keep the medallion",
+              "Drop it"
+            ]
+          },
+          {
+            "id": "counter-end-gaps",
+            "q": "The gap at each end of the existing counter — west end to the corner, east end to the door casing.",
+            "why": "Two numbers, and the one thing photographs genuinely cannot give us. The counter's end panel stands 24 inches forward of the wall, so no single photo can separate depth from sideways position — five separate attempts failed today for that reason, not for lack of trying. More pixels won't fix it. A tape will. It's the last assumption holding up the counter's exact position.",
+            "options": []
+          },
+          {
+            "id": "winebay-fascia",
+            "q": "Conceal the wine bay's slider track behind a fascia?",
+            "why": "The track runs exposed for fourteen feet above the run, and the ledger already records a preference for tracks hidden behind a fascia. The Wine Wall lane deliberately did not decide this one — unlike the cove strip, which showed zero visible pixels and was simply dropped, this is a visible change to a run your dad has been reviewing for weeks.",
+            "options": [
+              "Conceal it",
+              "Leave it exposed"
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Photo captions",
+        "items": [
+          {
+            "id": "cap-3580",
+            "q": "IMG_3580 — what is it showing?",
+            "options": []
+          },
+          {
+            "id": "cap-3582",
+            "q": "IMG_3582 — what is it showing?",
+            "options": []
+          },
+          {
+            "id": "cap-3583",
+            "q": "IMG_3583 — what is it showing?",
+            "options": []
+          },
+          {
+            "id": "cap-3585",
+            "q": "IMG_3585 — what is it showing?",
+            "options": []
+          },
+          {
+            "id": "cap-3594",
+            "q": "IMG_3594 — what is it showing?",
+            "options": []
+          },
+          {
+            "id": "cap-3595",
+            "q": "IMG_3595 — what is it showing?",
+            "options": []
+          },
+          {
+            "id": "cap-3599",
+            "q": "IMG_3599 has four blue marks — which is which?",
+            "options": []
+          },
+          {
+            "id": "cap-3600",
+            "q": "IMG_3600 — what is it showing?",
+            "options": []
+          },
+          {
+            "id": "cap-3601",
+            "q": "IMG_3601 — is that the fridge?",
+            "options": [
+              "Yes",
+              "No"
+            ]
+          },
+          {
+            "id": "cap-3605",
+            "q": "IMG_3605 — what is it showing?",
+            "options": []
+          },
+          {
+            "id": "cap-30slide",
+            "q": "What does '30 SLIDE' on the drawing mean?",
+            "options": []
+          }
+        ]
+      }
+    ]
+  }
+  </script>
 </main>
 
 <nav id="rail" aria-label="Chapters"></nav>

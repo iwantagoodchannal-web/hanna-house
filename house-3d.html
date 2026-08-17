@@ -121,6 +121,10 @@ const POST=m=>{ if(window.parent!==window){ try{ parent.postMessage(m,'*'); }cat
 const EMB={mode:'none',t:0,tTgt:0,cur:null,poseTgt:null,warm:-1,fovBase:72};
 
 const H = 118, DOOR_H = 80, KV = 150;           // ceiling, tape-measured · KV = kitchen vault (C-53)
+const KSOF = H;  // pantry-soffit datum for the kitchen rework's uppers (M-15):
+// Scan C shows ONE connected lower-ceiling plane (~119.7" med) — the pantry
+// soffit IS the dining-ceiling plane, so the datum is an ALIAS of H, never a
+// second literal. If H moves (M-5's laser check), KSOF follows.
 // KV: the vault height lived as a bare 150 in nine places across 01/06/08/10.
 // Scan 17 Aug read it three ways — 148.0 / 149.4 / 150.0 — which BRACKETS 150,
 // so the scan CONFIRMS the estimate rather than replacing it. Value unchanged;
@@ -144,9 +148,13 @@ const PLAN = {
   // ===================================================================
   win_s:[[47.5,94.5]],   // ONE south window - camera-matched sec_070/085/115/116
   walls:[   // openings are given along the wall's LONG axis
-    // the wall the cabinet sits on. Squared off at the east end per C-2/C-3,
-    // so it runs unbroken to the pantry's east wall.
-    {id:'w_run', x0:0,      x1:168,   z0:-25,   z1:-19},
+    // the wall the cabinet sits on. C-65: x1 is the MEASURED flat wall (M-9:
+    // 152.3" + a 47.9" 45-deg chamfer to ~186). The old 168 was C-20's circular
+    // sum; no X0 could fit the 142" counter against it (C-61). The 168" cabinet
+    // still fits the squared corner (M-9b, ~18" stub — C-20's "no stub" wrong).
+    // C-74 supersedes C-65's accepted gap: the chamfer is now `wall45d` below
+    // (existing state), and the proposal squares the corner (Walls builds both).
+    {id:'w_run', x0:0,      x1:152.3, z0:-25,   z1:-19},
     // bathroom west wall. Its west face IS Jake's set-back (C-7) and it is the
     // face carrying the switch + receptacle in sec_048 - Reading A confirmed.
     {id:'w_bw',  x0:-6.1,   x1:0,     z0:-101.5,z1:-19,  open:[[-90.9,-61.1]]}, // D17 30"
@@ -158,10 +166,17 @@ const PLAN = {
     // added that") - deleted. The hallway runs open to the bathroom door.
     {id:'w_ind', x0:-8,     x1:-6.1,  z0:-34,   z1:-19},
     {id:'w_div', x0:75.75,  x1:81.82, z0:-95.5, z1:-25},                        // bath | pantry
-    // pantry east wall = the face the 90-degree turn delivers you to (C-2).
-    // 33" clear. The drawing's D18 swing arc measures 33.9" and Jake's own SVG
-    // draws it 33.2". 28" left only 1" of wall for the casing.
-    {id:'w_pe',  x0:168,    x1:174.1, z0:-101.5,z1:-19,  tint:0xdfd8c9, open:[[-66.5,-33.5]]},  // D18 33"
+    // pantry east wall — C-74: MOVED to its measured position. The old x=168 was
+    // C-20's circular sum (86.2 derived by subtracting from 168 — C-34). Poly-Walls
+    // reads both faces at model x 184.0/188.0, z -53.0..-99.7; both room polygons
+    // and the transition-opening band agree at ~186. The wall spans ONLY from the
+    // chamfer's landing to the north wall — south of z=-52.9 the dining/kitchen
+    // boundary is OPEN (the model's tran east edge 188.4 was already ~right).
+    // C-74 addendum: SOLID — no door here in the existing state. The ONE pantry
+    // door is the measured swing on the chamfer (wall45d). D18 was the SAME door
+    // mis-hosted here by the disproven frame (C-50: "was a swing leaf"); its
+    // slider successor lives on the PROPOSED extended wall (wall45sq below).
+    {id:'w_pe',  x0:186.2,  x1:192.3, z0:-95.5, z1:-52.9, tint:0xdfd8c9},
     // ONE continuous north wall: bathroom, pantry and the kitchen sink leg all
     // share it. The old k_n / k_nw jog was a fabrication.
     {id:'w_back',x0:-110.4, x1:174.1, z0:-101.5,z1:-95.5},
@@ -188,16 +203,40 @@ const PLAN = {
   // was my error - Jake caught it. Length is set by the range + its flanking
   // drawer banks, not guessed.
   wall45:{id:'k_45', ax:393, az:-95.5, bx:447, bz:-41.5, t:6, h:KV, inferred:true},
+  // C-74: the RUN WALL's east chamfer — MEASURED, not inferred (M-9 47.9" face at
+  // 45.0; M-9b Poly-Walls faces 43.95/46.26; landing agrees with w_pe to 0.3").
+  // EXISTING STATE ONLY: the corner is chamfered today and the PROPOSAL squares it
+  // (C-2; M-9b: the 168" cabinet fits squared, ~18" stub — C-20's "no stub" wrong).
+  // Walls builds this into the existing-state group (G.exist class) and the squared
+  // continuation (x 152.3..186.2 flat at z -25..-19) into the proposed state.
+  // It carries THE pantry door (M-9c): ~33" leaf, hinge 5.2" from the south end,
+  // swings into dining. As-built swing; C-50 makes it a slider in the proposal.
+  wall45d:{id:'w_45d', ax:152.3, az:-19, bx:186.2, bz:-52.9, t:6, existOnly:true,
+           door:{off:5.2, w:33, casing:2.5}},
+  // C-74 addendum: the PROPOSAL's shell at the same corner (design geometry —
+  // the squaring decision C-2/M-9b, not a measurement). TWO pieces, both
+  // proposal-state (G.cab per Core's engine call): the squared run-wall band,
+  // and the pantry-east EXTENSION down to the new inside corner at (186.2,-25)
+  // — without it the squared proposal opens its own hole z -25..-52.9.
+  // The extension is what hosts C-50's slider: 70.5" of wall (with w_pe) takes
+  // a 33" leaf + ~35" park. Pocket vs barn-track and exact position: design,
+  // delegated (Kitchen+Walls), video may inform. See C-74 addendum.
+  wall45sq:{band:{x0:152.3, x1:186.2, z0:-25, z1:-19},
+            peExt:{x0:186.2, x1:192.3, z0:-52.9, z1:-25},
+            // C-75 (by delegation): concealed top-hung track, opening HARD
+            // against the corner end, leaf parks north, alder slab (C-21).
+            // ⚠ w:33 is a CEILING — at 33.5" no slider of any type fits (C-75).
+            door:{w:33, z0:-26.5, z1:-59.5, type:'slider-concealed', park:'north'}},
   rooms:[
     {id:'bath', l:'BATHROOM', x0:0,     x1:75.75, z0:-101.5,z1:-19},     // 6'-3-3/4" x 5'-10-1/2"
-    {id:'pant', l:'PANTRY',   x0:81.82, x1:168,   z0:-101.5,z1:-19},     // 86.2" x 5'-10-1/2"
+    {id:'pant', l:'PANTRY',   x0:81.82, x1:186.2, z0:-101.5,z1:-19},     // C-74: east wall measured at ~186 (was circular 86.2 wide)
     {id:'dine', l:'DINING',   x0:0,     x1:168,   z0:-19,   z1:235.3},   // floor stops at tran - no overlap
     {id:'hall', l:'HALLWAY',  x0:-104.4,x1:0,     z0:-101.5,z1:106.1},
     {id:'tran', l:'',         x0:168,   x1:188.4, z0:-19,   z1:76.4},    // transition corner
     // east strip to the w_de face — closes a C-19-class floor hole found in
     // review (nothing floored x 168-180 along the mask wall; black trench)
     {id:'dinE', l:'',         x0:168,   x1:180,   z0:76.4,  z1:235.3},
-    {id:'kitA', l:'KITCHEN',  x0:168,   x1:447,   z0:-101.5,z1:-19},   // covers the doorway strip
+    {id:'kitA', l:'KITCHEN',  x0:186.2, x1:447,   z0:-101.5,z1:-19},   // C-74: starts at the measured pantry east wall
     {id:'kitB', l:'',         x0:188.4, x1:447,   z0:-19,   z1:76.4},
   ],
   kitchen:[   // walls from the drawing, fixtures from Jake's export (C-13)
@@ -499,6 +538,33 @@ const TILE_TEX=(function(){
   const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping;
   t.anisotropy=8; return t;
 })();
+const STACK_TEX=(function(){
+  /* C-68 (kitchen rework, Phase 0): grey VERTICAL stacked tile from the decided
+     aesthetic (review-kitchen-2-concept-2.jpg). 512px maps to 32" of wall:
+     8 columns of 4" x 16" tiles in STACKED bond — vertical joints aligned, not
+     running bond — with thin light grout, per the concept.
+     ⚠ Unlike the older canvases (authored by eye against r128's linear read),
+     this one is painted in TRUE sRGB and the texture declares sRGBEncoding —
+     so the hexes below are honest colours, not pipeline-compensated ones. */
+  const S=512, c=document.createElement('canvas'); c.width=c.height=S;
+  const g=c.getContext('2d'), TW=S/8, TH=S/2, gr=2.5;
+  g.fillStyle='#b9b7b0'; g.fillRect(0,0,S,S);                 // light grout
+  // field grey 0x79787c: midpoint of the concept's raw sample (136,120,103)
+  // and its ceiling-corrected bound (106,120,144) — see C-68 notes in 04
+  const tint=['#79787c','#7d7c80','#757478','#7b7a7e','#777679','#7e7d81','#737276','#7a797d'];
+  for(let ty=0;ty<2;ty++) for(let tx=0;tx<8;tx++){
+    g.fillStyle=tint[(tx*3+ty*5)%8];
+    g.fillRect(tx*TW+gr/2, ty*TH+gr/2, TW-gr, TH-gr);
+    const sh=g.createLinearGradient(tx*TW,ty*TH,tx*TW,ty*TH+TH);   // ceramic sheen drift
+    sh.addColorStop(0,'rgba(255,255,255,0.10)'); sh.addColorStop(0.55,'rgba(255,255,255,0)');
+    sh.addColorStop(1,'rgba(30,32,38,0.10)');
+    g.fillStyle=sh; g.fillRect(tx*TW+gr/2,ty*TH+gr/2,TW-gr,TH-gr);
+  }
+  CANV.stack=c;
+  const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping;
+  t.encoding=THREE.sRGBEncoding;      // see the header comment
+  t.anisotropy=8; return t;
+})();
 /* Normal maps computed from the colour canvases by finite-differencing luminance.
    This is what gives wood pores, grout depth and travertine pitting real relief
    under the lights instead of a flat printed look. */
@@ -529,7 +595,7 @@ function normalFrom(cv,strength){
 }
 const NRM={grain:normalFrom(CANV.grain,7), plaster:normalFrom(CANV.plaster,2.5),
            splash:normalFrom(CANV.splash,9), granite:normalFrom(CANV.granite,3),
-           tile:normalFrom(CANV.tile,6)};
+           tile:normalFrom(CANV.tile,6), stack:normalFrom(CANV.stack,4)};
 const WOODMAT=[];
 CANV.grainH=(function(){                     // GRAIN rotated 90° for the slat door
   const c=document.createElement('canvas'); c.width=c.height=512;
@@ -567,6 +633,9 @@ const MAT={
   kit:    M(0xd6c39b,0.95),
   // one stain for the whole 14 ft (C-6). wineA/wineB are kept as names only so
   // the two halves stay readable in code - they are the SAME material now.
+  // ⚠ The hexes on wineA/wineB/slat/rack/oak are DEAD VALUES: applyFin(0) in
+  // 12-engine.js overwrites all five at startup from the FINISHES table.
+  // Editing them here changes nothing on screen — edit FINISHES instead.
   wineA:  W(0x74492a,0.6,4),
   wineB:  W(0x74492a,0.6,4),
   slat:   (function(){        // dark oak — grain runs ALONG the slats, not across
@@ -577,9 +646,20 @@ const MAT={
       normalScale:new THREE.Vector2(0.85,0.85), clearcoat:0.5, clearcoatRoughness:0.38});
     WOODMAT.push(m); return m;})(),
   rack:   W(0x8a5a2f,0.6,6),
-  counter:W(0x653f1f,0.6,3),  // stained knotty alder, sec_050/051/124
-  stone:  new THREE.MeshPhysicalMaterial({map:GRANITE_TEX,roughness:0.26,metalness:0.04,normalMap:NRM.granite,normalScale:new THREE.Vector2(0.55,0.55),clearcoat:0.85,clearcoatRoughness:0.17}),
-  granite:new THREE.MeshPhysicalMaterial({map:GRANITE_TEX,roughness:0.26,metalness:0.04,normalMap:NRM.granite,normalScale:new THREE.Vector2(0.55,0.55),clearcoat:0.85,clearcoatRoughness:0.17}),
+  // C-60 addendum: was 0x653f1f. That hex was authored by eye against the
+  // UNDECODED pipeline; the 14 Aug decode (12-engine) halved its rendered
+  // brightness and it was never re-picked — C-49's pattern, third instance.
+  // 0x8a6039 is the C-49 House-alder body, sampled off IMG_3503/3505 of the
+  // SAME kitchen boxes this material paints. Photo checks: kitchen boxes
+  // (111,78,49) in review-kitchen-1-today.jpg; counter faces ~(111,66,35) in
+  // review-wine-1-today.jpg.
+  counter:W(0x8a6039,0.6,3),  // stained knotty alder, sec_050/051/124
+  // normalScale here said 0.55 while applyReal (11-ui.js) restated 0.7 on every
+  // realism toggle — and applyReal(true) runs at startup, so 0.7 is what has
+  // ALWAYS rendered. Authored value set to the rendered truth (no appearance
+  // change) and applyReal now reads authored values instead of restating them.
+  stone:  new THREE.MeshPhysicalMaterial({map:GRANITE_TEX,roughness:0.26,metalness:0.04,normalMap:NRM.granite,normalScale:new THREE.Vector2(0.7,0.7),clearcoat:0.85,clearcoatRoughness:0.17}),
+  granite:new THREE.MeshPhysicalMaterial({map:GRANITE_TEX,roughness:0.26,metalness:0.04,normalMap:NRM.granite,normalScale:new THREE.Vector2(0.7,0.7),clearcoat:0.85,clearcoatRoughness:0.17}),
   steel:  new THREE.MeshStandardMaterial({color:0xd2d7dc,roughness:0.24,metalness:0.85}),
   dark:   M(0x35302a,0.5),
   table:  W(0x5a4028,0.58,2), oak:W(0x3f2c1c,0.62,4),   // dark oak legs — Jake
@@ -590,30 +670,83 @@ const MAT={
   bottle: new THREE.MeshPhysicalMaterial({color:0x24301f,roughness:0.18,metalness:0.02,clearcoat:1,clearcoatRoughness:0.16}),
   foil:   new THREE.MeshPhysicalMaterial({color:0x8c1c22,roughness:0.34,metalness:0.55}),
   label:  new THREE.MeshPhysicalMaterial({color:0xe8e0cd,roughness:0.88}),
-  alder:  W(0x653f1f,0.6,3),
+  alder:  W(0x8a6039,0.6,3),  // C-60 addendum: was 0x653f1f — same re-pick as
+                              // MAT.counter above; it IS the same real wood
+                              // (existing counter carcass, casings, window trim)
   trav:   new THREE.MeshPhysicalMaterial({color:0xe4d6bc,roughness:0.72,map:SPLASH_TEX,normalMap:NRM.splash,normalScale:new THREE.Vector2(1.3,1.3)}),
-  // C-63b: was 0x241609. That hex was authored BY EYE against the undecoded
-  // pipeline, so it was already effectively a linear value. C-63 added 'beam' to
-  // the decode list — arithmetically right — and double-darkened it: 0x241609
-  // decodes to 0x040201, essentially pure black. Same pattern as C-49: the decode
-  // was right, the DEFAULT was never re-picked.
-  // 0x695335 decodes to exactly the linear triple the old value rendered with
-  // (0.1412 / 0.0863 / 0.0353), so this restores the pre-C-63 appearance EXACTLY
-  // while keeping the pipeline consistent. It is a HOLD, not a claim about the
-  // true colour — see C-63b for why MAT.beam is overloaded and needs re-picking
-  // per object from the photographs.
-  beam:   W(0x695335,0.6,8),
+  // C-63b addendum pt2: RE-PICKED for the DINING BEAM specifically (the C-63b
+  // 0x695335 was a hold, not a colour — its history is in the ledger). Measured
+  // pair, 17 Aug: the hold rendered (85,64,42) in the dining view against the
+  // photographed beam's (66,32,29) in review-wine-1 → linear × (photo/render)^2.2
+  // per channel → 0x502621, R:G 2.11 vs the photo's 2.06. Dark warm red-brown
+  // stained timber — C-25's "near-black" was directionally right for THIS object.
+  // ⚠ Valid once the borrowers swap off: rafters → MAT.rafter (Walls, in
+  // flight) and the dining console → MAT.console below (Wine, patch sent).
+  beam:   W(0x502621,0.6,8),
   vault:  new THREE.MeshStandardMaterial({color:0x8ba0b3,roughness:0.92,map:PLASTER_TEX}),
   basin:  M(0x6d7378,0.35),
-  base:   W(0x4a2f1b,0.58,10),// stained baseboard, sec_048/132/133
-  orb:    new THREE.MeshPhysicalMaterial({color:0x2a2018,roughness:0.36,metalness:0.82}),
-  panel:  W(0x50301a,0.62,5),   // panel inset: one shade darker than the alder
+  // C-60 addendum: was 0x4a2f1b and UNDECODED — the shader received its sRGB
+  // bytes raw as linear, so the "dark stained baseboard" rendered washed-light
+  // (~2.7x too bright in linear, the C-63 beam failure in the other direction).
+  // Re-picked against the photograph (counter toe kick / entry door leaf in
+  // review-wine-1-today.jpg sample (94,54,25)/(100,55,24)) and 'base' is now in
+  // the decode list in 12-engine.js. Both halves of the fix land together —
+  // decoding the old hex alone would have crushed it near-black (C-63b).
+  base:   W(0x5e3619,0.58,10),// stained baseboard, sec_048/132/133
+  // C-63 addendum (orb): decoded + re-picked 17 Aug, evidence finally clean —
+  // IMG_3585's two drawer pulls at large scale, hammered plate faces sampled
+  // (73,55,41)/(80,58,40) → mean 0x4c3828, R:G 1.35 (metal, distinct from the
+  // wood's 1.68). Undecoded, the old 0x2a2018 rendered ~(158,136,113) — a light
+  // bronze that happened to match the SPLASH TRIM, not hardware; the trim now
+  // has its own MAT.btrim below. 'orb' is in 12-engine's decode list.
+  orb:    new THREE.MeshPhysicalMaterial({color:0x4c3828,roughness:0.36,metalness:0.82}),
+  panel:  W(0x6f4a2a,0.62,5),   // panel inset: one shade darker than the alder
+                                // (C-60 addendum: was 0x50301a; moved with
+                                // MAT.alder, keeping the one-shade-darker step —
+                                // 0x6f4a2a is the House-alder door tone)
   rug:    new THREE.MeshStandardMaterial({color:0x8a7358,roughness:0.95,map:RUG_TEX}),
   blk:    M(0x17130f,0.9),    // matte wrought iron / matte black
   shade:  M(0xe9dfc9,0.62),   // alabaster
   curt:   new THREE.MeshStandardMaterial({color:0x3a2b22,roughness:0.96,map:WEAVE_TEX}),   // chocolate, gold-embroidered
   bronze: M(0x4a3a26,0.5),
+  // MAT.btrim existed here for ~40 minutes and was WITHDRAWN: its "light
+  // antique bronze" samples were the TILE below the cap trim — the band is
+  // ~5px tall in the photo and tilts, so fixed-y sampling missed it. Wine's
+  // band-tracking (reproduced by Core) puts the trim at (58-90,36-64,18-44),
+  // R:G ~1.4 — the SAME finish as the pulls. The trim correctly uses MAT.orb.
+  // Do not re-mint from the (superseded) first C-63 orb addendum in the ledger.
   flag:   new THREE.MeshStandardMaterial({color:0xd8503c,transparent:true,opacity:0.30}),
+  /* ── C-68 (RESERVED · kitchen rework Phase 0) — STYLE materials from the
+     DECIDED aesthetic, review-kitchen-2-concept-2.jpg. Built ahead, APPLIED
+     NOWHERE YET: Kitchen wires them to G.kitNew massing in Phase 2, and the
+     concepts stay disqualified for geometry (C-12).
+     Values are photo-sampled with the warm cast bounded both ways —
+     raw sample / ceiling-corrected → midpoint authored:
+       shaker door  raw (155,110,73) · corrected (121,110,102) → 0x8a6e58
+       tile field   raw (136,120,103) · corrected (106,120,144) → 0x79787c
+         (the tile grey lives in STACK_TEX itself; ktile's colour stays white)
+     Black hardware: use the existing MAT.blk. 'shaker' is in 12-engine's sRGB
+     decode list with the other statics. */
+  shaker: W(0x8a6e58,0.55,4),   // light rift-oak shaker doors/frames
+  /* C-63b addendum: the vault rafters' own material — same wood family as the
+     cabinets, one stain darker, per Jake's kitchen photo (rafter (91,62,58) vs
+     cabinets (111,78,49) in one frame). Derived from Walls' measured miss: at
+     MAT.counter 0x8a6039 their ceiling/rafter ratio read 2.0x against the
+     photo's 2.6x, so linear scaled by (2.0/2.6)^2.2 = 0.561 → 0x6a482a,
+     R:G 1.47 exactly on target. Walls points the rafters here and confirms
+     with their harness; MAT.beam then serves ONLY the dining beam. */
+  rafter: W(0x6a482a,0.6,8),
+  /* ⚠ PLACEHOLDER, NOT photo-derived — do not read this as a match. The dining
+     east-wall console (09:130-133,149) has never been photographed: absent from
+     all staged AND unstaged frames (Wine, 17 Aug), and its very position rests
+     on C-28's frame-read mirroring, untestable from the eight photos. This
+     value is the old C-63b hold, so the console keeps its exact pre-split
+     appearance while MAT.beam gets re-picked from real evidence. One knob,
+     waiting for the east wall's first photograph. */
+  console:W(0x695335,0.6,8),
+  ktile:  new THREE.MeshPhysicalMaterial({map:STACK_TEX,normalMap:NRM.stack,
+    normalScale:new THREE.Vector2(0.6,0.6),roughness:0.32,
+    clearcoat:0.5,clearcoatRoughness:0.25}),
 };
 const root=new THREE.Group(); scene.add(root);
 const G={walls:new THREE.Group(),cab:new THREE.Group(),door:new THREE.Group(),
@@ -758,7 +891,20 @@ function doorSet(w,alongZ,o){
   // against the wall. Toggled by the Doors button, and walk mode opens them so
   // you can get through. They live in G.leafC / G.leafO, never in the collision
   // set, so an open leaf can never wall you in.
-  const wdt=o.b-o.a, side=(o.b+wdt+C<t1||o.a-wdt-C<t0)?1:-1;
+  // ⚠ WHICH WAY THE LEAF PARKS OPEN. This used to test the opening against the
+  // wall's THICKNESS bounds (t0/t1) instead of its LENGTH (a0/a1) — dimensionally
+  // the wrong pair, and it only ever gave the right answer by luck. C-74 shortened
+  // w_pe from 82.5" to 42.6" and the luck ran out: D18's parked-open leaf hung
+  // 31.4" of a 33" door off the end of the wall, floating in the transition.
+  // Now measured against the wall it has to lie on, and if NEITHER side can take
+  // it the open leaf is not built at all — a 33" leaf cannot lie flat on a 42.6"
+  // wall with a 33" hole in it, and a door hanging in mid-air is worse than a
+  // doorway that simply shows no parked leaf. The closed leaf is unaffected, and
+  // leaves are never in the collision set, so walk-through still works.
+  const a0=alongZ?w.z0:w.x0, a1=alongZ?w.z1:w.x1;
+  const wdt=o.b-o.a;
+  const fitsE=o.b+C+wdt<=a1+0.01, fitsW=o.a-C-wdt>=a0-0.01;
+  const side=fitsE?1:-1;
   const th=alongZ?w.x1:w.z1;
   // leaves float 0.2" off the wall plane — built exactly ON it, every parked-
   // open leaf z-fought with its wall (the biggest flicker source in review)
@@ -787,7 +933,9 @@ function doorSet(w,alongZ,o){
     }
   };
   leaf(o.a,o.b,G.leafC);                                       // closed, in the opening
-  const la=side>0?o.b+C:o.a-C-wdt; leaf(la,la+wdt,G.leafO);    // open, against the wall
+  if(fitsE||fitsW){                                            // open, against the wall
+    const la=side>0?o.b+C:o.a-C-wdt; leaf(la,la+wdt,G.leafO);
+  }
 }
 const _tintCache={};
 function TINT(c){
@@ -873,8 +1021,15 @@ PLAN.walls.forEach(buildWall);
     // origin that was 27.1" behind the cabinet front and sealed inside the wall
     // slab, so all six rendered nothing. They hang off the cabinet front at CD,
     // set 0.05" into it so no face is coplanar with it — the C-49 panel rule.
+    // MAT.counter, not MAT.beam. These are drawer faces on an alder cabinet and
+    // they were authored in the beam timber — which nobody ever saw, because
+    // C-55 had them sealed inside the wall for the life of the model. The first
+    // render after they were freed showed flat pasted panels in the wrong wood
+    // beside properly modelled drawer fronts. Decided under Jake's delegation of
+    // 17 Aug; the evidence is his own kitchen photos, where every drawer face is
+    // the same stain as the box it sits in.
     const DT=0.5;
-    for(let d=0;d<3;d++) box(fl-4,7.5,DT,MAT.beam,sx,10+d*9,CD+DT/2-0.05,g2);  // drawer faces
+    for(let d=0;d<3;d++) box(fl-4,7.5,DT,MAT.counter,sx,10+d*9,CD+DT/2-0.05,g2);  // drawer faces
   }
   // Local z is now depth out from the wall face, so these read as what they are:
   // a 0.2" splash on the wall, the medallion 0.1" proud of the splash, and its
@@ -894,6 +1049,68 @@ PLAN.walls.forEach(buildWall);
   }
 })();
 
+
+// C-74: the RUN WALL's east chamfer, and the proposal squaring it.
+// Two states, two groups. The corner is chamfered TODAY (measured: M-9 47.9" face
+// at 45.0 deg, Poly-Walls 43.95/46.26, landing agreeing with w_pe to 0.3") and the
+// PROPOSAL squares it flat so the 168" run can land. Before C-74 this corner was
+// simply absent: C-65 shortened w_run to its measured 152.3 and nothing replaced
+// the missing 15.7", leaving an open slot from the dining room into the pantry.
+//
+// ⚠ ORIGIN CONVENTION IS THE CENTRE LINE HERE, not the face. That is the opposite
+// of the k_45 assembly group above, and deliberate: this group builds the WALL,
+// which is symmetric about its own centre, whereas that one hangs cabinets off a
+// face. Local +x runs a->b (toward the pantry); local +z points into the DINING
+// room. If you add a fixture to this group, z=0 is the middle of the wall — the
+// mistake C-29 and C-55 both made.
+(function(){
+  const w=PLAN.wall45d, dx=w.bx-w.ax, dz=w.bz-w.az, len=Math.hypot(dx,dz);
+  const ang=-Math.atan2(dz,dx), F=w.t/2;
+  const g=new THREE.Group();
+  g.position.set((w.ax+w.bx)/2, 0, (w.az+w.bz)/2); g.rotation.y=ang; G.exist.add(g);
+  const at=a=>a-len/2;                                  // face distance -> local x
+  const seg=(a,b,y0,y1,m,d,z)=>{ if(b-a<=0.05||y1-y0<=0.05) return;
+    box(b-a, y1-y0, d||w.t, m||MAT.wall, at((a+b)/2), (y0+y1)/2, z||0, g); };
+  const o0=w.door.off, o1=w.door.off+w.door.w, C=w.door.casing, CT=0.8, R=0.05;
+  seg(0,o0,0,H); seg(o1,len,0,H); seg(o0,o1,DOOR_H,H);  // jambs + header
+  // baseboard, dining face only — the run wall's own base dies at x=152.3 and a
+  // baseboard that stops mid-wall is exactly what gets noticed
+  seg(0,o0,0,5.5,MAT.base,0.7,F+0.35); seg(o1,len,0,5.5,MAT.base,0.7,F+0.35);
+  // casing. The legs run R PAST the opening, never short of it — stopping short
+  // hands the reveal to the wall and turns 6" of alder jamb into white plaster,
+  // which is the regression Jake caught on the other three doors today.
+  const csg=(a,b,y0,y1)=>box(b-a, y1-y0, w.t+CT*2, MAT.alder, at((a+b)/2), (y0+y1)/2, 0, g);
+  csg(o0-C,o0+R,0,DOOR_H+C); csg(o1-R,o1+C,0,DOOR_H+C); csg(o0-C,o1+C,DOOR_H,DOOR_H+C);
+  // leaf, closed, on the dining face. In G.exist rather than G.leafC/G.leafO, so
+  // it follows the STATE (this door does not exist in the proposal) rather than
+  // the Doors toggle — it is deliberately not animated.
+  box(o1-o0-0.2, DOOR_H-1, 1.75, MAT.alder, at((o0+o1)/2), (1+DOOR_H)/2, F+1.08, g);
+  for(const p of [[5,DOOR_H*0.44],[DOOR_H*0.5,DOOR_H-4]])
+    box(o1-o0-6.2, p[1]-p[0], 0.35, MAT.panel, at((o0+o1)/2), (p[0]+p[1])/2, F+1.78, g);
+})();
+// PLAN.wall45sq — the PROPOSED shell, two pieces, both G.cab so they appear only
+// with the proposal and vanish with it (the chamfer above is G.exist and does the
+// opposite). Squaring the corner is part of the cabinet install.
+//   band  — the run wall carried on flat to the pantry corner
+//   peExt — the pantry east wall carried SOUTH to that squared inside corner.
+//           Without it the proposal has a hole of its own at z -25..-52.9, which
+//           is the same defect as C-65's in the other state: shorten or square one
+//           wall and the neighbour has to be asked whether it still meets it.
+// C-50's slider hosts on peExt+w_pe (70.5" of wall for a 33" leaf). Its position
+// and pocket-vs-track are design-delegated and NOT built here — a solid proposed
+// wall is correct until the door is designed, and an invented slider is not.
+(function(){
+  const B=5.5, T=0.7;
+  for(const p of [PLAN.wall45sq.band, PLAN.wall45sq.peExt]){
+    const m=pbox(p.x0,p.x1,p.z0,p.z1,0,H,MAT.wall,G.cab); m.userData={y0:0,y1:H};
+    const alongZ=(p.z1-p.z0)>=(p.x1-p.x0);
+    const b1=alongZ?pbox(p.x0-T,p.x0,p.z0,p.z1,0,B,MAT.base,G.cab)
+                   :pbox(p.x0,p.x1,p.z0-T,p.z0,0,B,MAT.base,G.cab);
+    const b2=alongZ?pbox(p.x1,p.x1+T,p.z0,p.z1,0,B,MAT.base,G.cab)
+                   :pbox(p.x0,p.x1,p.z1,p.z1+T,0,B,MAT.base,G.cab);
+    b1.userData=b2.userData={y0:0,y1:B};
+  }
+})();
 /* ===================== the run: wine + coffee ===================== */
 (function(){
   const [wine,cof]=PLAN.cabinet;
@@ -1030,7 +1247,18 @@ PLAN.walls.forEach(buildWall);
     // all: the crown band (110.4-113) is solid across the full case depth. Now a
     // valance strip on the FRONT face just below the crown, washing down the
     // field - the same idiom as the coffee bay's under-cabinet light.
-    B(iL,iR,wine.z1-3.4,wine.z1-2.4,109.4,110.2,glow);
+    // TOP COVE WASH DELETED — decided, not abandoned. Jake delegated this one.
+    // C-52 moved it out of the run wall; an A/B render across all 40 shot
+    // cameras then showed it drawing ZERO visible pixels anywhere — the door
+    // track occludes it from every eye-height view and the crown band is solid
+    // full-depth above it. Relocating it to the crown's underside DID make it
+    // render (629/718/786 px in the hero and materials views) — and made things
+    // worse: it reads as a second bright bar beside the track, in precisely the
+    // zone Jake complained about as "random floating white". A cove light needs
+    // a fascia to hide the source; without one there is no position here that is
+    // both visible and right. The bay keeps its two strips that DO work — under
+    // the service ledge and in the niche — because both are tucked behind
+    // something. See the fascia recommendation with the track below.
     B(iL,iR,wine.z1-3.4,wine.z1-2.4,LEDGE-2.4,LEDGE-1.7,glow);
     if(useNiche) B(nCx-nHW,nCx+nHW,wine.z0+2,wine.z0+3,nY1-2.2,nY1-1.4,glow);
     // LADDER RAIL REMOVED: it was built at z -21.6, i.e. entirely inside the run
@@ -1151,7 +1379,23 @@ PLAN.walls.forEach(buildWall);
   box(dW-0.2,5.0,1.0,MAT.slat,cx,7.2,-0.79,G.door);                      // bottom rail
   for(const px of [wine.x0+7.5, wine.x1-7.5])
     box(1.2,10,1.3,MAT.steel,px,52,-0.45,G.door);                        // two pulls
-  pbox(wine.x0-2,cof.x1+2,-2.0,-0.8,DT+0.3,DT+2.1,MAT.steel,G.cab);      // track is FIXED, not on the door
+  // TRACK — two changes, both decided under Jake's delegation, both cheap to revert.
+  // 1. Trimmed from x -2..170 to the end panels. The old 2" stubs overhung BOTH
+  //    ends of the run, hanging in open air past the cabinet with nothing to
+  //    carry them. It still spans the full run, which the door needs: the leaf
+  //    parks over the coffee bay at offset 84.
+  // 2. MAT.steel -> MAT.orb. Sampled, the steel track rendered (209,201,188) —
+  //    a near-white bar 14 feet long at 107", and my best candidate for Jake's
+  //    "random floating white". Every piece of hardware in his photographs is
+  //    dark bronze: pulls, outlet plates, splash trim. ORB makes it recede and
+  //    matches the house rather than fighting it.
+  // NOT DONE, and recommended instead of built: conceal it behind a fascia.
+  // C-50a already records that preference for the pantry slider — "track hidden
+  // behind a fascia" — and the same argument applies here. That is a real design
+  // change to a run his dad has been reviewing for weeks, so it wants his eye,
+  // not mine. It is also what a cove light at this height would need (see the
+  // deleted top wash above); one fascia would answer both.
+  pbox(wine.x0-0.75,cof.x1+0.75,-2.0,-0.8,DT+0.3,DT+2.1,MAT.orb,G.cab);  // track is FIXED, not on the door
   for(const tx of [wine.x0+6,cx,wine.x1-6])
     box(1.1,4,1.1,MAT.steel,tx,DT-1.4,-1.7,G.door);                      // hangers
 })();
@@ -1340,7 +1584,32 @@ PLAN.walls.forEach(buildWall);
   // one clean tapered solid: a 4-sided frustum turned 45 deg so its faces square
   // up, squashed in depth. 54x24 at the bottom -> 30x13 at the top. flatShading
   // or the four faces smooth-shade into a cone.
-  const hmat=new THREE.MeshStandardMaterial({color:new THREE.Color(0x653f1f).convertSRGBToLinear(),roughness:0.62,flatShading:true});
+  // C-60 fallout, caught by RENDERING the room rather than reading the diff: the
+  // hood needs its own material because it must be flatShaded (a 4-sided frustum
+  // smooth-shades into a cone otherwise), so it is the one piece of kitchen
+  // cabinetry MAT does not reach. Core retinted MAT.counter/alder to House alder
+  // and the hood stayed behind at the old 0x653f1f.
+  //
+  // Two failed attempts are worth recording, because both looked right in source:
+  //   copying MAT.counter's COLOUR alone  -> pale tan. The cabinets get their
+  //     tone from a grain MAP; an unmapped material at the same hex reads far
+  //     lighter.
+  //   cloning the material outright       -> still lighter than its neighbours,
+  //     because a CANTED flat-shaded face catches more light than a vertical one.
+  //
+  // The decode is the answer, and it was the original author's: before C-60 the
+  // hood's 0x653f1f was EXACTLY MAT.counter's colour, differing only by an
+  // sRGB decode. That decode was never a mistake - it is what compensates for
+  // the canted face. So clone for map/roughness/clearcoat, then decode, which
+  // reproduces the original relationship and carries any future retint.
+  // CLONE the cabinet material and only override shading. Copying the colour
+  // alone was not enough and rendering proved it: MAT.counter carries a grain
+  // MAP, and an unmapped material at the same colour reads far lighter - the
+  // hood went pale tan against mid-brown cabinets. Cloning takes colour, map,
+  // normal map, roughness and clearcoat together, so the hood is the cabinets
+  // by construction and every future retint reaches it.
+  const hmat=MAT.counter.clone(); hmat.flatShading=true;
+  hmat.color.convertSRGBToLinear();
   const hgeo=new THREE.CylinderGeometry(21.2,38.2,20,4);
   hgeo.rotateY(Math.PI/4); hgeo.scale(1,1,0.444); hgeo.computeVertexNormals();
   const hg=new THREE.Mesh(hgeo,hmat); hg.position.set(0,76,-1); hood.add(hg);
@@ -1357,8 +1626,13 @@ PLAN.walls.forEach(buildWall);
   // cant (dz/dy = -0.267), so the standoff is uniform top to bottom.
   const hFaceZ=y=>-1+(38.2-17*(y-66)/20)*0.7071*0.444;
   const hCant=-Math.atan(0.267);
+  // MAT.panel, not MAT.beam: in the photograph these are RAISED PANELS in the
+  // same wood as the hood, not dark inlays. MAT.panel is the "one shade darker
+  // than the alder" used for every other panel inset in this file, so they read
+  // as relief and retint with the cabinets. MAT.beam is near-black and read as
+  // three dark rectangles stuck on the hood.
   for(const px of [-12,0,12]){
-    const p=box(10,8,0.8,MAT.beam,px,76,hFaceZ(76)+0.5,hood);
+    const p=box(10,8,0.8,MAT.panel,px,76,hFaceZ(76)+0.5,hood);
     p.rotation.x=hCant;
   }
   const hb=box(46,1.6,1.0,MAT.beam,0,69.5,hFaceZ(69.5)+0.5,hood);  // moulding under
@@ -1455,11 +1729,27 @@ PLAN.walls.forEach(buildWall);
    been C-16's. The scan settles which side was right. */
 (function(){
   const L=142, D=24.5, CH=36, SPL=12, F=-19+D-1.5;   // C-16; splash is 3 courses
-  // C-46: the counter is EAST-aligned — its east end meets the wall turn at
-  // x=168, bare wall at the WEST end (sec_050: the west end panel stands ~26"
-  // east of the corner). It was modelled west-flush; Jake: "the before is
-  // wrong on where the cabinet is going — the after is correct."
-  const X0=26;
+  // C-46 SUPERSEDED, do not restore its 26". It read east-alignment off sec_050
+  // — a frame reading — and Jake's straight-on photograph contradicts it: the
+  // counter fills 99.6% of the wall between the hallway jamb and the door
+  // casing, with small reveals at BOTH ends, not 26" of bare wall at the west.
+  // (Jake's quote in C-46 was about where the NEW cabinet goes, not this one.)
+  // C-61 EXECUTED. X0 is now DERIVED FROM THE WALL, never a literal — that rule
+  // exists because C-53 and C-56 were both "one number copied into places that
+  // then stopped tracking", and X0=26 was about to be the third: Hub's C-65 took
+  // w_run to its measured 152.3 and this counter carried on to x 168.75, hanging
+  // 16.4" past the end of its own wall with 15.7" of backsplash floating behind
+  // nothing. L is UNCHANGED at 142 — it is the best-evidenced number here
+  // (C-16, tape 142.5, scan M-3 141.3/144.4) and nothing has challenged it.
+  //
+  // Centred is an INTERIM, not the answer. It gives 4.40" of reveal each side,
+  // which agrees with the 4.1"-a-side implied by the straight-on photograph to
+  // within 0.3" — but that symmetry is arithmetic, not a measurement. The east
+  // side probably carries trim PLUS the chamfer facet where the west carries
+  // trim only, so the true split is likely uneven. Pending the Poly-Walls jamb
+  // positions; when they land, replace the /2 with the real insets.
+  const RUNW = PLAN.walls.find(w=>w.id==='w_run');
+  const X0 = (RUNW.x1 - RUNW.x0 - L)/2;
   const EX=(x0,x1,z0,z1,y0,y1,m)=>pbox(x0+X0,x1+X0,z0,z1,y0,y1,m,G.exist);
   EX(0,L,-19,F,4,CH-1.25,MAT.alder);                       // carcass, on a toe kick
   EX(0,L,-19,F-3,0,4,MAT.base);                            // recessed toe
@@ -1517,7 +1807,6 @@ PLAN.walls.forEach(buildWall);
     EX(f[0]+1.6,f[1]-1.6,-18.62,-18.52,f[2]+1.6,f[3]-1.6,M(0xefe9dd,0.9));  // mat
     EX(f[0]+3.4,f[1]-3.4,-18.52,-18.44,f[2]+3.4,f[3]-3.4,M(0x6b6862,0.85)); // photo
   }
-  // 5 bronze single-gang plates in the top tile course - sec_092/041/049
   // FOUR plates in the splash, not five, and unevenly spaced — counted off the
   // straight-on frame at full resolution. A fifth plate exists on the BARE WALL
   // east of the splash; not modelled, because it sits on shell geometry whose
@@ -1559,10 +1848,10 @@ G.exist.visible=false;
   // console: plinth, open shelf, top, three full-depth dividers. NOT legged —
   // the 0..4 plinth runs the whole 90" footprint. Dividers are inset 0.03" so
   // they no longer share the plinth's x=170 / x=179.4 / z=190 planes.
-  pbox(170,179.4,100,190,0,4,MAT.beam,G.furn);            // plinth
-  pbox(170,179.4,100,190,29,32,MAT.beam,G.furn);          // top
-  pbox(170,179.4,100,190,14,15.6,MAT.beam,G.furn);        // open shelf
-  for(const cz of [101.6,143,188.4]) pbox(170.03,179.37,cz,cz+1.57,0,29,MAT.beam,G.furn);
+  pbox(170,179.4,100,190,0,4,MAT.console,G.furn);            // plinth
+  pbox(170,179.4,100,190,29,32,MAT.console,G.furn);          // top
+  pbox(170,179.4,100,190,14,15.6,MAT.console,G.furn);        // open shelf
+  for(const cz of [101.6,143,188.4]) pbox(170.03,179.37,cz,cz+1.57,0,29,MAT.console,G.furn);
   // ten masks, irregular sizes and heights, several trailing 30-40" fibre hair
   (function(){
     const MK=[[97,6,86,9],[106,5,62,0],[113,8,78,34],[123,4.5,57,0],[129,7,90,0],
@@ -1578,7 +1867,7 @@ G.exist.visible=false;
   (function(){const led=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.5,0.4),
     new THREE.MeshBasicMaterial({color:0x39e07a}));
     led.position.set(178.8,47.8,89); G.furn.add(led);})();
-  pbox(171,179.4,86,98,39,40.4,MAT.beam,G.furn);           // floating shelf
+  pbox(171,179.4,86,98,39,40.4,MAT.console,G.furn);           // floating shelf
   // DR-W3 credenza, west wall (sec_070/088/117): 3-D diamond front, light top,
   // thin dark legs
   pbox(0.6,13,97,149,4,32,MAT.slat,G.furn);
@@ -1658,7 +1947,21 @@ G.ceil.visible=false;
   // review-wine-1 shows it dark. One material was serving two different real
   // woods. C-25 was sampled off video frames; this is a photograph, and that
   // ordering has now settled four disagreements in one day.
-  for(let z=-92;z<70;z+=34) bm(192,445,z,z+6,140,KV,MAT.counter);   // kitchen vault rafters
+  //
+  // RE-MEASURED after C-60 moved MAT.counter to 0x8a6039, and both candidates
+  // tested rather than assumed:
+  //                                    ratio    warmth R:G
+  //     his photo (target)              2.6x       1.47
+  //     MAT.counter  0x8a6039           2.0x       1.44
+  //     MAT.beam     0x695335           2.3x       1.27
+  //     MAT.rafter   0x6a482a         <- measured below
+  // His rafters are genuinely a shade darker than his cabinets (91,62,58 against
+  // 111,78,49 in one frame), so neither existing material was right: counter is
+  // the cabinets' wood, and beam would re-couple these to the dining beam — the
+  // very fault this line exists to fix. Core derived MAT.rafter from the miss
+  // itself, linear(0x8a6039) x (2.0/2.6)^2.2, and it lands on the photo's own
+  // R:G of 1.47. Verified that arithmetic channel by channel before adopting it.
+  for(let z=-92;z<70;z+=34) bm(192,445,z,z+6,140,KV,MAT.rafter);   // kitchen vault rafters
   // ⚠ THE TWO OPENING HEADS ARE DELETED. They were an 8" x 95.4" x 14" slab at
   // the kitchen transition (x 168..176) and a 6.1" x 94.7" x 16" slab at the
   // hallway transition (x -6.1..0), both MAT.beam, both at the ceiling, both
@@ -1820,11 +2123,18 @@ label('WINE',42,-9,13); label('COFFEE',126,-9,13);
 
 
 /* ===================== UI ===================== */
+/* Rewritten 17 Aug (C-66 follow-up, delegated): every fact below re-checked
+   against the current ledger — the old text predated the scan and restated
+   claims that had moved (pantry "width", vault "estimate", the C-20 span sum).
+   Provenance tags stay: this panel's house style is saying HOW a number is
+   known. Bottle counts interpolate from 07's BOTTLES_N/M rather than repeating
+   the literals (trap class 1). */
 document.getElementById('spec').innerHTML=
  `<b>Run</b> 14&#8242;-0&#8243; &times; 19&#8243; &times; ${H}&#8243;<br>
-  <b>Stove</b> 45&#176; corner (your correction)<br>
-  <b>Dining</b> 15&#8242;-0&#8243; &times; 20&#8242;-8&#8539;&#8243; <span style="color:#9a8f7f">(DINING 104, architect&#8217;s plan)</span><br>
-  <b>Bathroom</b> 6&#8242;-3&#190;&#8243; &nbsp;<b>Pantry</b> 86&#8243; &nbsp;<span style="color:#9a8f7f">both 5&#8242;-10&#189;&#8243; deep &mdash; together they span the 14&#8242; run (derived &mdash; C-34 tape pending)</span><br>
+  <b>Stove</b> 45&#176; corner (Jake&#8217;s correction)<br>
+  <b>Dining</b> 15&#8242;-0&#8243; &times; 20&#8242;-8&#8539;&#8243; <span style="color:#9a8f7f">(DINING 104, architect&#8217;s plan &mdash; scan agrees &#177;2&#8243;)</span><br>
+  <b>Bathroom</b> 6&#8242;-3&#190;&#8243; &times; 5&#8242;-10&#189;&#8243; <span style="color:#9a8f7f">(scan-confirmed)</span><br>
+  <b>Pantry</b> not a simple rectangle &mdash; ~74.8&#8243; flat, ~108.6&#8243; to the 45&#176; chamfer&#8217;s far end <span style="color:#9a8f7f">(scan &mdash; why the three old &#8220;widths&#8221; never agreed)</span><br>
   <b>Hallway</b> 8&#8242;-2&#188;&#8243; &nbsp; <b>Kitchen</b> 21&#8242;-7&#190;&#8243;<br>
   <b>Table</b> 63&#8243; &times; 99&#8243;, dark oak &nbsp; <b>Door</b> solid, slat-faced<br>
   <b>Wine</b> <span id="bc"></span> bottles at 3&#190;&#8243; pitch, X-bin bulk storage under a
@@ -1833,17 +2143,17 @@ document.getElementById('spec').innerHTML=
   the other one holds <span id="bcalt"></span>.</span><br>
   <div style="background:rgba(93,122,88,.14);border:1px solid rgba(93,122,88,.4);border-radius:10px;padding:7px 9px;margin-top:7px;font-size:10.5px;line-height:1.5;color:#44523f">
   <b>Settled since last time</b><br>
+  &bull; <b>The run wall is MEASURED</b> &mdash; 152.3&#8243; flat plus a 47.9&#8243; 45&#176; corner chamfer (scan). The 168&#8243; cabinet still fits once that corner is squared, with room to spare &mdash; whether to square it stays an open design call (C-3).<br>
+  &bull; <b>Ceilings</b> &mdash; kitchen vault <b>scan-confirmed</b> at 148&ndash;150&#8243;, modelled 150&#8243;. Dining held at 118&#8243; by decision; the scan reads ~121.5&#8243; and that gap is logged, not explained (M-5).<br>
+  &bull; <b>The existing counter&#8217;s colour is matched to the photograph</b> (C-60) &mdash; it keeps the house&#8217;s own alder and deliberately does not follow the finish cycle.<br>
   &bull; <b>90&#176; turn confirmed</b> &mdash; the run is one plain rectangle, no wrap.<br>
-  &bull; <b>West-end corner: the wall steps BACK.</b> sec_048 is decisive &mdash; the baseboard mitres concave then convex and the switch + receptacle sit on a west-facing return. The &ldquo;pier projecting&rdquo; reading is dead.<br>
-  &bull; <b>Kitchen east wall</b> &mdash; you chose the architect&#8217;s 21&#8242;-7&#190;&#8243;, so x&nbsp;=&nbsp;447.<br>
-  &bull; <b>Ceilings</b> &mdash; dining is exactly cabinet height (118&#8243;); kitchen vault at 12&#8242;-6&#8243;.<br>
+  &bull; <b>Kitchen east wall</b> &mdash; the architect&#8217;s 21&#8242;-7&#190;&#8243;, so x&nbsp;=&nbsp;447.<br>
   &bull; <b>Pantry door moved south</b> &mdash; it opened straight into the counter before.</div>
   <div style="background:rgba(141,58,38,.1);border:1px solid rgba(141,58,38,.36);border-radius:10px;padding:7px 9px;margin-top:7px;font-size:10.5px;line-height:1.5;color:#79412f">
-  <b>Open questions for you</b><br>
-  &bull; <b>Pantry width</b> &mdash; the 86.2&#8243; is derived, not taped (C-34). One tape: bathroom west wall &rarr; pantry east wall.<br>
-  &bull; <b>Windows:</b> camera-matching says the south wall has <b>ONE</b> window (+ one on the west wall). The plan's three-window read did not survive it &mdash; confirm on site.<br>
-  &bull; Wine layout &mdash; <b>Display niche</b> (259) or <b>Max bottles</b> (399)?<br>
-  &bull; The 12&#8242;-6&#8243; kitchen vault is my estimate of &ldquo;much taller&rdquo; &mdash; give me a number if you have one.<br>
+  <b>Open questions</b><br>
+  &bull; <b>Windows:</b> camera-matching says the south wall has <b>ONE</b> window (+ one on the west wall). The plan&#8217;s three-window read did not survive it &mdash; confirm on site.<br>
+  &bull; Wine layout &mdash; <b>Display niche</b> (${BOTTLES_N}) or <b>Max bottles</b> (${BOTTLES_M})?<br>
+  &bull; <b>Island position</b> &mdash; the size is measured from the scan; the position needs two tapes: island edge &rarr; north counter run, island edge &rarr; east counter run.<br>
   &bull; Everything east of x&nbsp;=&nbsp;364&#8243; in the kitchen is off the edge of the drawing &mdash; hit <b>Reconstructed</b>.</div>`;
 
 document.getElementById('bc').textContent=BOTTLES_N;
@@ -1895,16 +2205,27 @@ const FACE_L=[];
     scene.add(l); scene.add(l.target); FACE_L.push(l);
   }
 })();
+/* The realism-ON values are the AUTHORED values in 02/04 — stashed once here,
+   never restated. Restating them was trap class 1 (duplicated derivation): 04
+   said stone/granite normalScale 0.55 while this function forced 0.7 from
+   startup, so the authored number was a lie for as long as both existed. */
+const EXPO0=renderer.toneMappingExposure;      // 02-scene.js owns this value
 function applyReal(on){
-  for(const m of WOODMAT){ m.normalScale.set(on?0.85:0.02,on?0.85:0.02);
-    m.clearcoat=on?0.5:0.02; m.envMapIntensity=on?0.55:0.3; }
+  for(const m of WOODMAT){
+    if(m.userData.ns0===undefined){ m.userData.ns0=m.normalScale.x; m.userData.cc0=m.clearcoat; }
+    const ns=on?m.userData.ns0:0.02;
+    m.normalScale.set(ns,ns);
+    m.clearcoat=on?m.userData.cc0:0.02; m.envMapIntensity=on?0.55:0.3; }
   for(const k of ['wall','wallInf','trav','stone','granite']){
-    const m=MAT[k]; if(m.normalScale) m.normalScale.set(on?(k==='trav'?1.3:0.7):0.02,
-                                                        on?(k==='trav'?1.3:0.7):0.02);
+    const m=MAT[k];
+    if(m.normalScale){
+      if(m.userData.ns0===undefined) m.userData.ns0=m.normalScale.x;
+      const ns=on?m.userData.ns0:0.02; m.normalScale.set(ns,ns);
+    }
     m.envMapIntensity=on?((k==='stone'||k==='granite')?0.8:1.2):0.5;
   }
   MAT.steel.envMapIntensity=on?1.6:0.6; MAT.glass.envMapIntensity=on?1.5:0.6;
-  renderer.toneMappingExposure=on?1.22:1.09;   // AO bake eats ~10% brightness
+  renderer.toneMappingExposure=on?EXPO0:1.09;  // AO bake eats ~10% brightness
   key.shadow.mapSize.set(on?2048:1024,on?2048:1024);
   key.shadow.radius=on?3.2:1; if(key.shadow.map){key.shadow.map.dispose();key.shadow.map=null;}
   for(const l of FACE_L) l.visible=on;
@@ -1921,6 +2242,14 @@ const FINISHES=[
   {n:'Espresso',     body:0x241608, door:0x140b03, rack:0x33200e, brd:0x1c1006},
 ];
 let finIx=0;
+/* ⛔ DELIBERATE (C-60): the EXISTING house's woods — MAT.counter, alder, panel,
+   base, table — are NOT in this list and must not be added. They are real wood
+   in the house (the drop counter being removed, casings, baseboards), not
+   cabinetry anyone is choosing a finish for: they must not turn walnut when a
+   client cycles the finish. Their colours are photo-matched constants in
+   04-materials.js. If Jake ever decides the Before chapter should follow the
+   selected finish instead (open question, MESSAGES.md), extend the setHex
+   block below — do not retint them anywhere else. */
 function applyFin(i){
   const f=FINISHES[i];
   // r128 legacy color management hands hex colors to the shader as LINEAR —
@@ -1939,9 +2268,13 @@ function applyFin(i){
 // ⚠ MAT.beam is shared: dining beams + chamfer drawer faces + bronze listello (06),
 // hood moulding + pot-rack uprights (08), AND the dining credenza (09). All darken
 // together, which is correct per C-25 but visible in three lanes' files.
-// ⚠ 'base' and 'orb' are ALSO undecoded. Deliberately NOT swept in — there is
-// evidence for beam and none for those. See C-63.
-for(const k of ['counter','alder','panel','table','beam']) MAT[k].color.convertSRGBToLinear();
+// C-60 addendum: 'base' added 17 Aug WITH a simultaneous re-pick of its hex in
+// 04-materials.js (photo evidence: review-wine-1-today.jpg) — the two halves of
+// that fix must never be separated, or C-63b recurs. 'orb' remains undecoded:
+// still no evidence for it (C-63's rule: each needs its own).
+// 'shaker' (C-68) rides the same list. 'ktile' needs no decode — its colour is
+// in STACK_TEX, which declares sRGBEncoding itself.
+for(const k of ['counter','alder','panel','table','beam','base','shaker','rafter','console','orb']) MAT[k].color.convertSRGBToLinear();
 document.getElementById('bReal').onclick=function(){
   REALON=!REALON; this.classList.toggle('on',REALON); applyReal(REALON);
 };
@@ -2337,7 +2670,10 @@ function setWarm(v){
    rests). One reallocation per transition, with hysteresis so it never
    oscillates mid-scroll. */
 const QLT={moving:Math.min(devicePixelRatio,1.35),
-           still:Math.min(devicePixelRatio,EMBED?1.5:2),   // keep the embed's cap
+           // the still-state cap is whatever 02-scene.js set at startup — read it
+           // back rather than restating min(dpr, EMBED?1.5:2) here (the two
+           // copies had already been written; they can no longer drift apart)
+           still:renderer.getPixelRatio(),
            state:'still', quiet:0};
 /* render-on-demand: when nothing moves, nothing renders */
 let NEEDS=3; const wake=(n=3)=>{ NEEDS=Math.max(NEEDS,n); };
@@ -2482,4 +2818,4 @@ tick();
 </script>
 </body>
 </html>
-<!-- build:59adb5f -->
+<!-- build:d24074f -->

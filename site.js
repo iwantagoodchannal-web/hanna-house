@@ -353,13 +353,15 @@ document.querySelectorAll('#layout-chips .chip').forEach(ch =>
   }));
 
 /* ---------- tabs / pages ---------- */
-const pages = ['wine-wall','kitchen','bathroom','review'];
+/* 'decide' has no tab by design — Jake opens #decide directly */
+const pages = ['wine-wall','kitchen','bathroom','review','decide'];
 const tabs = [...document.querySelectorAll('.tab')];
 const glider = document.querySelector('.tab-glider');
 const savedScroll = {};
 let page = 'wine-wall';
 function placeGlider(){
   const b = tabs.find(t=>t.classList.contains('on'));
+  if(!b){ glider.style.width = '0px'; return; }   // tabless page (decide)
   glider.style.width = b.offsetWidth+'px';
   glider.style.left = b.offsetLeft+'px';
 }
@@ -857,6 +859,136 @@ if(location.hash){ const h=location.hash.slice(1); if(pages.includes(h)&&h!=='wi
     })();
   }, {threshold: .4});
   io.observe(document.querySelector('.specs'));
+})();
+
+/* ---------- decide page ----------
+   Jake's response queue, at #decide (no tab). Renders decisions.json when it
+   is deployed (Router maintains it; needs deploy.sh to ship it), otherwise
+   the inline seed in index.html. One tap per answer, notes optional, saves
+   locally as he goes; Send posts to Netlify form "decisions". */
+(function(){
+  const listEl = document.getElementById('decide-list');
+  if(!listEl) return;
+  const sendEl   = document.getElementById('decide-send');
+  const countEl  = document.getElementById('decide-count');
+  const statusEl = document.getElementById('decide-status');
+  const copyEl   = document.getElementById('decide-copy');
+  const summaryEl= document.getElementById('decide-summary');
+  const pageEl   = document.getElementById('page-decide');
+  const KEY = id => 'hh-decide:'+id;
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+
+  function reserve(){
+    const h = summaryEl.getBoundingClientRect().height;
+    if(h) pageEl.style.paddingBottom = Math.round(h+40)+'px';
+  }
+  if(window.ResizeObserver) new ResizeObserver(reserve).observe(summaryEl);
+  addEventListener('resize', reserve);
+
+  const items = [];
+
+  function build(data){
+    document.getElementById('decide-updated').textContent =
+      'Queue updated: '+(data.updated || 'unknown');
+    (data.groups||[]).forEach(g=>{
+      const h = document.createElement('h3');
+      h.className='d-group'; h.textContent=g.title;
+      listEl.appendChild(h);
+      g.items.forEach(it=>{
+        const s = {choice:null, note:''};
+        try{ Object.assign(s, JSON.parse(localStorage.getItem(KEY(it.id))||'{}')); }catch(e){}
+        const card = document.createElement('article');
+        card.className='d-card';
+        const hasOpts = it.options && it.options.length;
+        card.innerHTML =
+          '<p class="d-q">'+esc(it.q)+'</p>'+
+          (it.why ? '<p class="d-why">'+esc(it.why)+'</p>' : '')+
+          (hasOpts ? '<div class="d-opts">'+it.options.map(o=>
+            '<button class="d-opt" data-o="'+esc(o)+'" aria-pressed="false">'+
+            esc(o)+'</button>').join('')+'</div>' : '')+
+          '<label class="d-note"><span>'+(hasOpts?'Anything to add?':'Type your answer.')+
+          '</span><textarea rows="2"></textarea></label>';
+        listEl.appendChild(card);
+        const ta = card.querySelector('textarea'); ta.value = s.note || '';
+        const opts = [...card.querySelectorAll('.d-opt')];
+        const paint = ()=>{
+          opts.forEach(b=>{ const on = b.dataset.o===s.choice;
+            b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+          card.classList.toggle('answered', !!(s.choice || s.note.trim()));
+        };
+        const save = ()=>{
+          try{ localStorage.setItem(KEY(it.id), JSON.stringify(s)); }catch(e){}
+          paint(); sync();
+        };
+        opts.forEach(b=>b.addEventListener('click', ()=>{
+          s.choice = (s.choice===b.dataset.o ? null : b.dataset.o); save(); }));
+        ta.addEventListener('input', ()=>{ s.note = ta.value; save(); });
+        ta.addEventListener('focus', ()=>document.body.classList.add('typing'));
+        ta.addEventListener('blur',  ()=>document.body.classList.remove('typing'));
+        items.push({id:it.id, q:it.q, group:g.title, s});
+        paint();
+      });
+    });
+    sync(); reserve();
+  }
+
+  function summary(){
+    const answered = items.filter(i=>i.s.choice || i.s.note.trim());
+    const date = new Date().toLocaleDateString(undefined,
+      {year:'numeric', month:'long', day:'numeric'});
+    let body = 'Decisions from Jake — '+date+'\n';
+    let g = null;
+    answered.forEach(i=>{
+      if(i.group!==g){ g=i.group; body += '\n== '+g+' ==\n'; }
+      body += '\n* '+i.q+'\n';
+      if(i.s.choice) body += '  ANSWER: '+i.s.choice+'\n';
+      if(i.s.note.trim()) body += '  '+i.s.note.trim()+'\n';
+    });
+    if(!answered.length) body += '\n(nothing answered yet)\n';
+    return {answered, date, body};
+  }
+  function sync(){
+    const {answered} = summary();
+    countEl.textContent = answered.length
+      ? answered.length+' of '+items.length+' answered'
+      : items.length+' waiting — tap to answer';
+  }
+
+  sendEl.addEventListener('click', ()=>{
+    const {answered, date, body} = summary();
+    const say=(m,c)=>{ statusEl.textContent=m;
+      statusEl.className='review-status '+(c||''); };
+    sendEl.disabled=true; sendEl.textContent='Sending…'; say('');
+    const fd = new FormData();
+    fd.append('form-name','decisions');
+    fd.append('submitted', date);
+    fd.append('answered', String(answered.length));
+    fd.append('answers', body);
+    fetch('/', {method:'POST', body:fd}).then(r=>{
+      if(!r.ok) throw new Error(r.status);
+      sendEl.textContent='✓ Sent';
+      say('Recorded — the chats will pick these up.', 'ok');
+    }).catch(()=>{
+      sendEl.disabled=false; sendEl.textContent='Send my answers';
+      say('That didn’t go through — tap “copy my answers” and paste them into any chat.', 'err');
+      reserve();
+    });
+  });
+  copyEl.addEventListener('click', ()=>{
+    const t = summary().body;
+    const done=()=>{ copyEl.textContent='copied';
+      setTimeout(()=>{ copyEl.textContent='copy my answers'; },1600); };
+    if(navigator.clipboard && navigator.clipboard.writeText)
+      navigator.clipboard.writeText(t).then(done,done);
+    else done();
+  });
+
+  fetch('decisions.json', {cache:'no-store'})
+    .then(r=>{ if(!r.ok) throw 0; return r.json(); })
+    .catch(()=>{ try{
+        return JSON.parse(document.getElementById('decisions-data').textContent);
+      }catch(e){ return {groups:[]}; } })
+    .then(build);
 })();
 
 /* ---------- shot mode ---------- */
