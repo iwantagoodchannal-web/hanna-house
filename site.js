@@ -465,7 +465,12 @@ if(location.hash){ const h=location.hash.slice(1); if(pages.includes(h)&&h!=='wi
   const REVIEW = [
     {area:'kitchen', label:'Kitchen', cards:[
       {n:1, title:'The sink window',   desc:'Across the island to the window and the pantry door.', ar:'3 / 4', v:['today']},
-      {n:2, title:'The range wall',    desc:'Cooktop, the tile medallion, and the uppers.',         ar:'3 / 4', v:['today']},
+      /* concept-1: the proposed corner (fridge relocated) in the CURRENT
+         knotty-alder style · concept-2: same proposal, light shaker + grey
+         stacked tile. Named because they differ in KIND — an unnamed
+         "Option 1" would read as "no change", which it is not. */
+      {n:2, title:'The range wall',    desc:'Cooktop, the tile medallion, and the uppers.',         ar:'3 / 4',
+       v:['today', {k:'concept', n:2, names:['Knotty alder','Light & grey']}]},
       {n:3, title:'The whole kitchen', desc:'Range, ovens and the island in one look.',             ar:'3 / 4', v:['today']},
       {n:4, title:'Toward the hallway',desc:'Past the island to the hallway and the red wall.',     ar:'3 / 4', v:['today']}
     ]},
@@ -502,18 +507,28 @@ if(location.hash){ const h=location.hash.slice(1); if(pages.includes(h)&&h!=='wi
     /* every version expands to image KEYS: 'today' → ['today'],
        {k:'concept',n:3} → ['concept-1','concept-2','concept-3'].
        Circles and the favorite are stored under the FULL key, so a mark on
-       option 2 can never be read as option 1. */
+       option 2 can never be read as option 1. Iterations may carry NAMES —
+       {k:'concept', n:2, names:['Knotty alder','Light & grey']} — used on
+       the pills and in the email; two options that differ in KIND, not just
+       number, must say how (an unnamed "Option 1" hides the decision). */
     const vers = c.v.map(x => typeof x==='string' ? {k:x, n:1} : x);
     const keysFor = ver => ver.n>1
       ? Array.from({length:ver.n}, (_,i)=>ver.k+'-'+(i+1)) : [ver.k];
     const allKeys = vers.flatMap(keysFor);
+    const kname = {};        // full key → display label (custom name aware)
+    vers.forEach(ver => keysFor(ver).forEach((k,i)=>{
+      kname[k] = ver.n>1
+        ? VLABEL[ver.k]+' · '+((ver.names && ver.names[i]) || 'option '+(i+1))
+        : (VLABEL[ver.k] || ver.k);
+    }));
+    const pillName = (ver,i) => (ver.names && ver.names[i]) || 'Option '+(i+1);
     const card = document.createElement('article');
     card.className = 'review-card';
     card.dataset.still = id; card.dataset.area = A.area;
     card.innerHTML =
       '<div class="r-stage" style="aspect-ratio:'+c.ar+'">'+
         allKeys.map((k,i)=>'<img class="r-img'+(i?'':' on')+'" data-k="'+k+
-          '" src="'+srcOf(A.area,c.n,k)+'" alt="'+esc(c.title)+' — '+labelOf(k)+
+          '" src="'+srcOf(A.area,c.n,k)+'" alt="'+esc(c.title)+' — '+esc(kname[k])+
           '" loading="lazy" draggable="false">').join('')+
         '<canvas class="r-draw" aria-hidden="true"></canvas>'+
       '</div>'+
@@ -537,7 +552,7 @@ if(location.hash){ const h=location.hash.slice(1); if(pages.includes(h)&&h!=='wi
     try{ Object.assign(s, JSON.parse(localStorage.getItem(KEY(id)) || '{}')); }catch(e){}
     if(!s.marks || typeof s.marks !== 'object' || Array.isArray(s.marks)) s.marks = {};
     if(typeof s.fav !== 'string') s.fav = null;
-    entries.push({id, title:c.title, area:A.area, areaLabel:A.label, n:c.n, s});
+    entries.push({id, title:c.title, area:A.area, areaLabel:A.label, n:c.n, s, kname});
 
     const ok  = card.querySelector('.r-ok');
     const ta  = card.querySelector('textarea');
@@ -580,7 +595,7 @@ if(location.hash){ const h=location.hash.slice(1); if(pages.includes(h)&&h!=='wi
       card.classList.toggle('marked', anyMarks(s));
       clrBtn.hidden = !strokes().length;
       clrBtn.textContent = allKeys.length>1
-        ? 'erase circles on “'+labelOf(curKey)+'”' : 'erase circles';
+        ? 'erase circles on “'+kname[curKey]+'”' : 'erase circles';
     }
     let drawing=false, cur=null;
     const pt = e => { const r=cv.getBoundingClientRect();
@@ -608,9 +623,9 @@ if(location.hash){ const h=location.hash.slice(1); if(pages.includes(h)&&h!=='wi
       const ks = keysFor(curVer);
       if(ks.length < 2){ itersEl.hidden = true; itersEl.innerHTML = ''; return; }
       itersEl.hidden = false;
-      itersEl.innerHTML = ks.map(k=>
+      itersEl.innerHTML = ks.map((k,i)=>
         '<button class="i-btn'+(k===curKey?' on':'')+'" data-k="'+k+
-        '" aria-pressed="'+(k===curKey)+'">Option '+k.split('-').pop()+'</button>').join('')+
+        '" aria-pressed="'+(k===curKey)+'">'+esc(pillName(curVer,i))+'</button>').join('')+
         '<button class="r-fav'+(s.fav===curKey?' on':'')+'" aria-pressed="'+(s.fav===curKey)+
         '">'+(s.fav===curKey?'★ My favorite':'☆ My favorite')+'</button>';
       itersEl.querySelectorAll('.i-btn').forEach(b=>
@@ -698,22 +713,22 @@ if(location.hash){ const h=location.hash.slice(1); if(pages.includes(h)&&h!=='wi
         Object.entries(e.s.marks).forEach(([vk,st])=>{
           if(!st || !st.length) return;
           body += '  [circled '+st.length+' spot'+(st.length>1?'s':'')+
-                  ' on the “'+labelOf(vk)+'” image — see attached]\n';
+                  ' on the “'+(e.kname[vk]||labelOf(vk))+'” image — see attached]\n';
         });
-        if(e.s.fav) body += '  FAVORITE: '+labelOf(e.s.fav)+'\n';
+        if(e.s.fav) body += '  FAVORITE: '+(e.kname[e.s.fav]||labelOf(e.s.fav))+'\n';
       });
     }
     if(oks.length){
       body += '\nLOOKS GOOD:\n';
       oks.forEach(e=>{ body += '- ['+e.areaLabel+'] '+e.title+
-        (e.s.fav ? ' — favorite: '+labelOf(e.s.fav) : '')+'\n'; });
+        (e.s.fav ? ' — favorite: '+(e.kname[e.s.fav]||labelOf(e.s.fav)) : '')+'\n'; });
     }
     /* a favorite alone is real feedback — never let it vanish from the email */
     const favOnly = entries.filter(e=>e.s.fav && !e.s.ok && !isFlagged(e));
     if(favOnly.length){
       body += '\nFAVORITES PICKED:\n';
       favOnly.forEach(e=>{ body += '- ['+e.areaLabel+'] '+e.title+
-        ' — '+labelOf(e.s.fav)+'\n'; });
+        ' — '+(e.kname[e.s.fav]||labelOf(e.s.fav))+'\n'; });
     }
     if(!flagged.length && !oks.length && !favOnly.length) body += '\n(nothing marked yet)\n';
     return {flagged, oks, date, body, who};
