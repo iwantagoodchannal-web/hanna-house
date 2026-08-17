@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>The Hanna House — The Wine Wall</title>
+<meta name="description" content="A 14-foot wine and coffee wall for the dining room. Scroll to walk the house.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+
+<!-- ivory loading veil — the scene fades up from this, never a black flash -->
+<div id="veil" aria-hidden="true">
+  <div class="veil-mark">The Hanna House</div>
+  <div class="veil-line"><div class="veil-fill"></div></div>
+</div>
+
+<!-- the 3D stage: one fixed, full-viewport model behind everything -->
+<div id="stage" aria-hidden="true">
+  <iframe id="model" src="house-3d.html?embed=1" title="3D model of the house"
+          allow="pointer-lock; fullscreen" scrolling="no"></iframe>
+  <div id="dip"></div>
+</div>
+
+<header class="nav" id="nav">
+  <a class="wordmark" href="#wine-wall">The Hanna House</a>
+  <nav class="tabs" role="tablist" aria-label="Areas">
+    <span class="tab-glider" aria-hidden="true"></span>
+    <button class="tab on" role="tab" aria-selected="true" data-page="wine-wall">Wine&nbsp;Wall</button>
+    <button class="tab" role="tab" aria-selected="false" data-page="kitchen">Kitchen</button>
+    <button class="tab" role="tab" aria-selected="false" data-page="bathroom">Bathroom</button>
+    <button class="tab" role="tab" aria-selected="false" data-page="review">Review</button>
+  </nav>
+</header>
+
+<!-- ================= WINE WALL — the scroll ================= -->
+<main id="page-wine-wall" class="page">
+
+  <section class="ch" id="ch-hero" data-ch="hero">
+    <div class="pin">
+      <div class="copy hero-copy">
+        <p class="eyebrow">The dining room</p>
+        <h1>A wall of wine.<br>A wall of coffee.</h1>
+        <p class="lede">Fourteen feet of stained alder, floor to ceiling,<br class="wide-only">
+           where the drop counter used to&nbsp;be.</p>
+      </div>
+      <div class="scroll-cue" aria-hidden="true"><span></span>Scroll</div>
+    </div>
+  </section>
+
+  <section class="ch" id="ch-before" data-ch="before">
+    <div class="pin">
+      <div class="copy side-copy">
+        <p class="eyebrow">Before</p>
+        <h2>The drop counter did its job.</h2>
+        <p class="body">Thirty years of keys, mail and homework. The granite was good.
+           The wall above it was always waiting.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="ch" id="ch-walk" data-ch="walk">
+    <div class="pin">
+      <div class="copy cap" data-at="0.30">
+        <p class="eyebrow">The walk</p>
+        <h2>Down the hallway.</h2>
+      </div>
+      <div class="copy cap" data-at="0.95">
+        <h2>14 feet.<br>Floor to ceiling.</h2>
+        <p class="body">Wine to the left. Coffee to the right. One piece of&nbsp;furniture.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="ch" id="ch-reveal" data-ch="reveal">
+    <div class="pin">
+      <div class="copy cap low" data-at="0.42">
+        <p class="eyebrow">The reveal</p>
+        <h2>Slide.</h2>
+        <p class="body">A solid slat door<span class="wide-only"> —
+           seven-and-a-quarter-inch boards —</span> glides across the wine&nbsp;bay.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="ch" id="ch-inside" data-ch="inside">
+    <div class="pin">
+      <div class="copy side-copy">
+        <p class="eyebrow">Inside</p>
+        <h2><span id="bottle-count">0</span> bottles.</h2>
+        <p class="body">Stemware at eye level. A display shelf above.
+           Bulk storage in X-bins below a stone service ledge.</p>
+        <div class="chip-row" id="layout-chips">
+          <button class="chip on" data-niche="1">Display niche · 259</button>
+          <button class="chip" data-niche="0">Max bottles · 399</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ch" id="ch-coffee" data-ch="coffee">
+    <div class="pin">
+      <div class="copy side-copy right" data-at="0.62">
+        <p class="eyebrow">The coffee side</p>
+        <h2>The other<br>84&nbsp;inches.</h2>
+        <p class="body">The door slides home. A 40-inch stone landing for the
+           machines. Cups behind glass, lit from below.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="ch" id="ch-house" data-ch="house">
+    <div class="pin">
+      <div class="copy cap" data-at="0.94">
+        <p class="eyebrow">Through the house</p>
+        <h2>It ends where the kitchen begins.</h2>
+        <p class="body">That’s the next project. <button class="linklike" id="to-kitchen">See what’s coming&nbsp;→</button></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="ch" id="ch-explore" data-ch="explore">
+    <div class="pin">
+      <div class="copy center-copy">
+        <p class="eyebrow">Explore</p>
+        <h2>Walk it yourself.</h2>
+        <div class="chip-row" id="explore-controls">
+          <button class="chip primary" id="chip-walk">Walk through</button>
+          <button class="chip" id="chip-doors">Doors</button>
+          <button class="chip" id="chip-state">Before&nbsp;/&nbsp;After</button>
+        </div>
+        <p class="body dim" id="walk-hint"><span class="kbd-hint"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> move
+           · drag to look · <kbd>Esc</kbd> ends</span><span class="touch-hint">Hold the arrows
+           to move · drag the scene to look</span></p>
+        <div class="chip-row touch-drive" aria-hidden="false">
+          <button class="chip" id="drive-fwd">▲ Walk</button>
+          <button class="chip" id="drive-back">▼ Back</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="details" id="ch-details">
+    <div class="ba-wrap">
+      <p class="eyebrow">Before / After</p>
+      <h2>Same wall. New job.</h2>
+      <div class="ba" id="ba" role="slider" aria-label="Compare before and after"
+           aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" tabindex="0">
+        <img src="assets/before.jpg" alt="The existing drop counter" draggable="false">
+        <div class="ba-top"><img src="assets/after.jpg" alt="The proposed wine wall" draggable="false"></div>
+        <div class="ba-handle" aria-hidden="true"><span class="ba-knob"><svg width="14" height="10" viewBox="0 0 14 10" aria-hidden="true"><path d="M4.2 1 1 5l3.2 4M9.8 1 13 5l-3.2 4" fill="none" stroke="#1d1a16" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+        <span class="ba-tag l" aria-hidden="true">Before</span>
+        <span class="ba-tag r" aria-hidden="true">After</span>
+      </div>
+    </div>
+    <div class="spec-sheet">
+      <p class="eyebrow">The piece</p>
+      <dl class="specs">
+        <div><dt>Run</dt><dd>14′-0″ × 19″ × 118″</dd></div>
+        <div><dt>Wine</dt><dd>259 bottles · 399 max</dd></div>
+        <div><dt>Coffee landing</dt><dd>40″ stone</dd></div>
+        <div><dt>Door</dt><dd>Solid slat · 7¼″ boards</dd></div>
+        <div><dt>Finishes</dt><dd>Walnut · Oak · Espresso · Alder</dd></div>
+        <div><dt>Dining room</dt><dd>15′-0″ × 20′-8⅛″</dd></div>
+      </dl>
+    </div>
+    <footer>
+      <p>Modelled from the house itself — 148 video frames, 43 logged corrections, one tape measure.</p>
+      <p class="dim">The Hanna House · 2026</p>
+    </footer>
+  </section>
+
+</main>
+
+<!-- ================= KITCHEN / BATHROOM — in design ================= -->
+<main id="page-kitchen" class="page still-page" hidden>
+  <div class="still kitchen-still" aria-hidden="true"></div>
+  <div class="still-copy">
+    <p class="eyebrow">Kitchen</p>
+    <h2>In design.</h2>
+    <p class="lede">The next chapter. Measurements underway.</p>
+  </div>
+</main>
+
+<main id="page-bathroom" class="page still-page" hidden>
+  <div class="still bath-still" aria-hidden="true"></div>
+  <div class="still-copy">
+    <p class="eyebrow">Bathroom</p>
+    <h2>In design.</h2>
+    <p class="lede">After the kitchen. Quiet for now.</p>
+  </div>
+</main>
+
+<!-- ================= REVIEW — stills sign-off ================= -->
+<main id="page-review" class="page review-page" hidden>
+  <header class="review-intro">
+    <p class="eyebrow">Design review</p>
+    <h2>Tell us what you think.</h2>
+    <p class="lede">Here are eight views of the new wine wall. Look at each one.
+       If something should change, just type it in the box under that picture.
+       When you're done, press the green button at the bottom.</p>
+    <label class="review-who">
+      <span>Your name</span>
+      <input type="text" id="review-name" autocomplete="name" placeholder="Your name">
+    </label>
+  </header>
+
+  <!-- Netlify detects this form in the deployed HTML; the live submission is
+       sent by site.js. Kept hidden — the real UI is the gallery below. -->
+  <form name="design-review" data-netlify="true" netlify-honeypot="bot-field"
+        enctype="multipart/form-data" hidden>
+    <input type="text" name="reviewer"><input type="text" name="submitted">
+    <input type="text" name="approved"><input type="text" name="changes">
+    <textarea name="review"></textarea>
+    <input type="file" name="circled" multiple>
+    <input type="text" name="bot-field">
+  </form>
+
+  <div class="review-gallery" id="review-gallery">
+
+    <article class="review-card" data-still="review-01-the-wall">
+      <div class="r-stage">
+        <img src="assets/review-01-the-wall.jpg" alt="The full wine wall, straight on" loading="lazy">
+        <canvas class="r-draw" aria-hidden="true"></canvas>
+      </div>
+      <h3>The wall</h3>
+      <p class="desc">All fourteen feet, straight on from the dining room.</p>
+      <div class="r-buttons">
+        <button class="r-ok" aria-pressed="false">This one looks good</button>
+        <button class="r-draw-btn" aria-pressed="false">Circle on the photo</button>
+        <button class="r-clear" hidden>erase circles</button>
+      </div>
+      <label class="r-note">
+        <span>Want something changed? Circle it above, or type it here.</span>
+        <textarea rows="3" aria-label="Changes for The wall"></textarea>
+      </label>
+    </article>
+
+    <article class="review-card" data-still="review-02-the-reveal">
+      <div class="r-stage">
+        <img src="assets/review-02-the-reveal.jpg" alt="The slat door half open across the wine bay" loading="lazy">
+        <canvas class="r-draw" aria-hidden="true"></canvas>
+      </div>
+      <h3>The reveal</h3>
+      <p class="desc">The slat door halfway across the wine bay.</p>
+      <div class="r-buttons">
+        <button class="r-ok" aria-pressed="false">This one looks good</button>
+        <button class="r-draw-btn" aria-pressed="false">Circle on the photo</button>
+        <button class="r-clear" hidden>erase circles</button>
+      </div>
+      <label class="r-note">
+        <span>Want something changed? Circle it above, or type it here.</span>
+        <textarea rows="3" aria-label="Changes for The reveal"></textarea>
+      </label>
+    </article>
+
+    <article class="review-card" data-still="review-03-inside">
+      <div class="r-stage">
+        <img src="assets/review-03-inside.jpg" alt="Inside the wine bay with the door fully open" loading="lazy">
+        <canvas class="r-draw" aria-hidden="true"></canvas>
+      </div>
+      <h3>Inside the wine bay</h3>
+      <p class="desc">Stemware at eye level, bulk storage below the stone ledge.</p>
+      <div class="r-buttons">
+        <button class="r-ok" aria-pressed="false">This one looks good</button>
+        <button class="r-draw-btn" aria-pressed="false">Circle on the photo</button>
+        <button class="r-clear" hidden>erase circles</button>
+      </div>
+      <label class="r-note">
+        <span>Want something changed? Circle it above, or type it here.</span>
+        <textarea rows="3" aria-label="Changes for Inside the wine bay"></textarea>
+      </label>
+    </article>
+
+    <article class="review-card" data-still="review-04-niche">
+      <div class="r-stage">
+        <img src="assets/review-04-niche.jpg" alt="The display niche, looking up" loading="lazy">
+        <canvas class="r-draw" aria-hidden="true"></canvas>
+      </div>
+      <h3>The display niche</h3>
+      <p class="desc">The lit shelf and the 259-bottle display layout.</p>
+      <div class="r-buttons">
+        <button class="r-ok" aria-pressed="false">This one looks good</button>
+        <button class="r-draw-btn" aria-pressed="false">Circle on the photo</button>
+        <button class="r-clear" hidden>erase circles</button>
+      </div>
+      <label class="r-note">
+        <span>Want something changed? Circle it above, or type it here.</span>
+        <textarea rows="3" aria-label="Changes for The display niche"></textarea>
+      </label>
+    </article>
+
+    <article class="review-card" data-still="review-05-coffee">
+      <div class="r-stage">
+        <img src="assets/review-05-coffee.jpg" alt="The coffee bay, three-quarter view" loading="lazy">
+        <canvas class="r-draw" aria-hidden="true"></canvas>
+      </div>
+      <h3>The coffee bay</h3>
+      <p class="desc">The 40-inch stone landing where the machines live.</p>
+      <div class="r-buttons">
+        <button class="r-ok" aria-pressed="false">This one looks good</button>
+        <button class="r-draw-btn" aria-pressed="false">Circle on the photo</button>
+        <button class="r-clear" hidden>erase circles</button>
+      </div>
+      <label class="r-note">
+        <span>Want something changed? Circle it above, or type it here.</span>
+        <textarea rows="3" aria-label="Changes for The coffee bay"></textarea>
+      </label>
+    </article>
+
+    <article class="review-card" data-still="review-06-uppers">
+      <div class="r-stage">
+        <img src="assets/review-06-uppers.jpg" alt="The upper glass cabinets, looking up" loading="lazy">
+        <canvas class="r-draw" aria-hidden="true"></canvas>
+      </div>
+      <h3>The uppers</h3>
+      <p class="desc">Cups behind glass, lit from below.</p>
+      <div class="r-buttons">
+        <button class="r-ok" aria-pressed="false">This one looks good</button>
+        <button class="r-draw-btn" aria-pressed="false">Circle on the photo</button>
+        <button class="r-clear" hidden>erase circles</button>
+      </div>
+      <label class="r-note">
+        <span>Want something changed? Circle it above, or type it here.</span>
+        <textarea rows="3" aria-label="Changes for The uppers"></textarea>
+      </label>
+    </article>
+
+    <article class="review-card" data-still="review-07-before">
+      <div class="r-stage">
+        <img src="assets/review-07-before.jpg" alt="The existing drop counter today" loading="lazy">
+        <canvas class="r-draw" aria-hidden="true"></canvas>
+      </div>
+      <h3>The room today</h3>
+      <p class="desc">The drop counter as it stands — same camera as the first view.</p>
+      <div class="r-buttons">
+        <button class="r-ok" aria-pressed="false">This one looks good</button>
+        <button class="r-draw-btn" aria-pressed="false">Circle on the photo</button>
+        <button class="r-clear" hidden>erase circles</button>
+      </div>
+      <label class="r-note">
+        <span>Want something changed? Circle it above, or type it here.</span>
+        <textarea rows="3" aria-label="Changes for The room today"></textarea>
+      </label>
+    </article>
+
+    <article class="review-card" data-still="review-08-kitchen">
+      <div class="r-stage">
+        <img src="assets/review-08-kitchen.jpg" alt="Looking toward the kitchen" loading="lazy">
+        <canvas class="r-draw" aria-hidden="true"></canvas>
+      </div>
+      <h3>Toward the kitchen</h3>
+      <p class="desc">Where the piece ends and the next project begins.</p>
+      <div class="r-buttons">
+        <button class="r-ok" aria-pressed="false">This one looks good</button>
+        <button class="r-draw-btn" aria-pressed="false">Circle on the photo</button>
+        <button class="r-clear" hidden>erase circles</button>
+      </div>
+      <label class="r-note">
+        <span>Want something changed? Circle it above, or type it here.</span>
+        <textarea rows="3" aria-label="Changes for Toward the kitchen"></textarea>
+      </label>
+    </article>
+
+  </div>
+
+  <div id="review-summary" role="region" aria-label="Review summary" aria-live="polite">
+    <button id="review-send">Send to Jake</button>
+    <span class="review-count" id="review-count"></span>
+    <p class="review-status" id="review-status" role="status"></p>
+    <a class="review-alt" id="review-email" href="#">or send as an email</a>
+    <button class="review-alt" id="review-copy">copy my notes</button>
+  </div>
+</main>
+
+<nav id="rail" aria-label="Chapters"></nav>
+<div id="compare-chip" aria-hidden="true">The house today — release to return</div>
+
+<script src="site.js"></script>
+</body>
+</html>
