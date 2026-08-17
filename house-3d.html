@@ -714,9 +714,25 @@ function doorSet(w,alongZ,o){
   // exactly as PLAN gives it and adds no new interpenetration - the trim's own
   // end faces end up buried in the wall, and only the 0.8" proud strips carry a
   // hairline reveal line, which is what casing does anyway.
+  // ⚠ THE LEGS RUN R PAST THE OPENING, NOT R SHORT OF IT. This direction is the
+  // whole point and it cost a live regression to learn. Stopping short also kills
+  // the coplanar pair — but it hands the reveal to the WALL, so 6.1" x 83.2" of
+  // alder jamb per door turned into flat white plaster. Jake, on the live site:
+  // "there's a little indentation that we've had perfect for so long on the side,
+  // and now it's not there." That indentation is this reveal, and what read as
+  // depth was the wood lining it. Running PAST the opening buries the wall's jamb
+  // face inside the casing instead, so the alder wins outright and there is still
+  // no shared plane. The only cost is a 0.05" x 0.6" sliver of casing inside the
+  // closed leaf's edge, which nothing can see.
   const R=0.05;
-  A(o.a-C,o.a-R,0,HD+C,MAT.alder);                  // casing legs
-  A(o.b+R,o.b+C,0,HD+C,MAT.alder);
+  A(o.a-C,o.a+R,0,HD+C,MAT.alder);                  // casing legs
+  A(o.b-R,o.b+C,0,HD+C,MAT.alder);
+  // The HEAD stays R clear of the opening, deliberately and not by symmetry: that
+  // leaves the header's plaster underside showing, which is what the doorway has
+  // always looked like. Dropping it R instead would line the head in alder too —
+  // arguably more correct for a cased opening, but it would change an appearance
+  // Jake has not complained about, on the night he is watching. Not my call to
+  // make quietly.
   A(o.a-C,o.b+C,HD+R,HD+C,MAT.alder);               // head
   A(o.a-C-1.6,o.b+C+1.6,HD+C,HD+C+1.4,MAT.alder);   // projecting head cap board
   // Two leaves are built: one CLOSED filling the opening, one OPEN parked flat
