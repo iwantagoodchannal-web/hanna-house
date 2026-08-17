@@ -1491,9 +1491,24 @@ PLAN.walls.forEach(buildWall);
   EX(-1.2,L+1.2,-20,F+1.2,CH-1.25,CH,MAT.granite);         // granite, 1.25" with overhang
   EX(-1.4,L+1.4,-20.2,F+1.4,CH-2.6,CH-1.25,MAT.stone);     // chiselled rock-face edge
   EX(0,L,-19,-18,CH,CH+SPL,travM(L,SPL));                  // 3 courses of travertine
-  EX(0,L,-19.2,-17.8,CH+SPL,CH+SPL+1.1,MAT.orb);           // ORB pencil cap liner
-  EX(0,1.2,-19.2,-17.8,CH,CH+SPL+1.1,MAT.orb);             // vertical end liner
-  EX(L-1.2,L,-19.2,-17.8,CH,CH+SPL+1.1,MAT.orb);
+  // The cap and the end liners are ONE ornate trim in the house, not two plain
+  // strips — IMG_3586/3583/3585 show the same scrolled relief running the top
+  // and turning down both ends. Modelled as a two-step moulding: body plus a
+  // proud bead, so it catches a highlight like a moulding instead of reading as
+  // a flat band. The scroll relief itself is a TEXTURE and belongs to Core.
+  const TRIM=(x0,x1,y0,y1)=>{ EX(x0,x1,-19.2,-17.9,y0,y1,MAT.orb);            // body
+                              EX(x0,x1,-17.9,-17.6,y0+0.25,y1-0.25,MAT.orb); }; // bead
+  TRIM(0,L,CH+SPL,CH+SPL+1.1);                             // cap, along the top
+  // the verticals STOP at the cap's underside — a mitre, not an overlap. Running
+  // them to CH+SPL+1.1 put both trims on the same planes in the two top corners:
+  // six coplanar pairs, the same fault as the slat door's stiles and rails (C-52).
+  TRIM(0,1.2,CH,CH+SPL);                                   // and turning down both ends
+  TRIM(L-1.2,L,CH,CH+SPL);
+  // Bronze medallion tiles let into the field — THREE, all in the middle course,
+  // ~32" apart. Counted off the straight-on frame; the east third of the splash
+  // was checked separately and carries none, so this is 3 and not 4. Same motif
+  // family as the floor's diamond dots (C-25), which the model already has.
+  for(const mx of [37,69,102]) EX(mx-2,mx+2,-18.1,-17.9,CH+4,CH+8,MAT.orb);
   // the salon hang above it - eight black frames, white mats, B/W portraits
   const FR=[[45,63,57,75],[66,80,60,74],[83,101,57,75],[104,118,72,86],
             [83,97,78,90],[45,59,78,90],[121,135,57,71],[104,118,55,69]];
@@ -1503,7 +1518,13 @@ PLAN.walls.forEach(buildWall);
     EX(f[0]+3.4,f[1]-3.4,-18.52,-18.44,f[2]+3.4,f[3]-3.4,M(0x6b6862,0.85)); // photo
   }
   // 5 bronze single-gang plates in the top tile course - sec_092/041/049
-  for(const ox of [12,40,68,96,124]) EX(ox-1.4,ox+1.4,-18.05,-17.75,43.2,47.5,MAT.orb);
+  // FOUR plates in the splash, not five, and unevenly spaced — counted off the
+  // straight-on frame at full resolution. A fifth plate exists on the BARE WALL
+  // east of the splash; not modelled, because it sits on shell geometry whose
+  // position is contested (W1 / H1). HEIGHT DELIBERATELY UNCHANGED: a count is
+  // something a photograph settles, a height is not, and 43.2-47.5 is within
+  // normal practice for outlets over a 36" counter.
+  for(const ox of [22,53,88,123]) EX(ox-1.4,ox+1.4,-18.05,-17.75,43.2,47.5,MAT.orb);
 })();
 G.exist.visible=false;
 
@@ -2461,4 +2482,4 @@ tick();
 </script>
 </body>
 </html>
-<!-- build:4668383 -->
+<!-- build:9391f47 -->
