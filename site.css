@@ -435,21 +435,7 @@ body.on-still #rail,body.exploring #rail{display:none}
 .review-note textarea::placeholder{color:var(--muted)}
 .review-note textarea:focus-visible{outline:2px solid var(--alder); outline-offset:2px}
 
-/* sticky sign-off bar — appears once the review is decidable */
-#review-summary{
-  position:fixed; left:50%; bottom:16px; transform:translate(-50%,14px); z-index:45;
-  width:min(980px, calc(100vw - 24px));
-  display:flex; align-items:center; flex-wrap:wrap; gap:10px;
-  padding:12px 16px; border-radius:20px;
-  background:var(--glass); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
-  border:1px solid var(--hair); box-shadow:0 10px 32px rgba(29,26,22,.16);
-  opacity:0; pointer-events:none; visibility:hidden;
-  transition:opacity .35s var(--ease), transform .35s var(--ease), visibility .35s;
-}
-#review-summary.on{opacity:1; transform:translate(-50%,0); pointer-events:auto;
-  visibility:visible}
-.review-count{margin-right:auto; font-size:14px; font-weight:600;
-  letter-spacing:.01em}
+/* (old sign-off bar rule removed — one authoritative definition lives below) */
 #review-email{text-decoration:none; display:inline-block}
 @media (max-width:560px){
   .review-page{padding-bottom:200px}
@@ -669,4 +655,29 @@ body.on-still #rail,body.exploring #rail{display:none}
   .review-count{flex-basis:100%; order:-1; font-size:13.5px}
   .r-buttons{flex-direction:row; flex-wrap:wrap}
   .r-buttons .r-ok,.r-draw-btn{flex:1 1 auto; width:auto; text-align:center}
+}
+
+/* --- the sign-off bar, single source of truth ---------------------------
+   A floating glass pill (the site's own language) rather than a full-width
+   slab. Width follows content; the page reserves room beneath so the pill
+   never covers the last card. */
+#review-summary{
+  position:fixed; left:50%; bottom:18px; transform:translateX(-50%);
+  z-index:45; width:max-content; max-width:calc(100vw - 28px);
+  display:flex; align-items:center; flex-wrap:wrap; gap:8px 14px;
+  padding:11px 14px 11px 11px; border-radius:999px;
+  background:rgba(245,241,232,.9);
+  backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+  border:1px solid var(--hair); box-shadow:0 8px 28px rgba(29,26,22,.13);
+  opacity:1; visibility:visible; pointer-events:auto;
+}
+#review-summary .review-count{margin:0}
+.review-status:empty{display:none}
+.review-status{flex-basis:100%; text-align:center; margin:0}
+/* room to scroll clear of the floating pill */
+.review-page{padding-bottom:132px}
+@media (max-width:640px){
+  #review-summary{left:14px; right:14px; transform:none; width:auto;
+    max-width:none; justify-content:center; border-radius:22px}
+  .review-page{padding-bottom:150px}
 }
