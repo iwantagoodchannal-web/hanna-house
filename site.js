@@ -437,8 +437,22 @@ if(location.hash){ const h=location.hash.slice(1); if(pages.includes(h)&&h!=='wi
   const sendEl   = document.getElementById('review-send');
   const statusEl = document.getElementById('review-status');
   const nameEl   = document.getElementById('review-name');
+  const summaryEl= document.getElementById('review-summary');
+  const pageEl   = document.querySelector('.review-page');
   const KEY = id => 'hh-review:'+id;
   const entries = [];
+
+  /* Reserve exactly the room the floating pill occupies, measured rather than
+     guessed. The old hard-coded 168px cleared a 167px pill by one pixel — any
+     extra line (a status message, the failure fallbacks) started covering the
+     last card. This tracks the pill through every state. */
+  function reserve(){
+    const h = summaryEl.getBoundingClientRect().height;
+    if(!h) return;                       // page hidden — remeasured when shown
+    pageEl.style.paddingBottom = Math.round(h + 40) + 'px';
+  }
+  if(window.ResizeObserver) new ResizeObserver(reserve).observe(summaryEl);
+  addEventListener('resize', reserve);
 
   try{ nameEl.value = localStorage.getItem('hh-review:name') || ''; }catch(e){}
   nameEl.addEventListener('input', ()=>{
@@ -623,7 +637,10 @@ if(location.hash){ const h=location.hash.slice(1); if(pages.includes(h)&&h!=='wi
       });
     })
     .catch(() => { sendEl.disabled = false; sendEl.textContent = 'Send to Jake';
+      /* only now do the fallbacks earn their place on screen */
+      summaryEl.classList.add('failed');
       say('That didn\u2019t go through. Tap \u201cor send as an email\u201d below.', 'err');
+      reserve();
     });
   });
 
@@ -635,7 +652,7 @@ if(location.hash){ const h=location.hash.slice(1); if(pages.includes(h)&&h!=='wi
       navigator.clipboard.writeText(t).then(done, done);
     else done();
   });
-  sync();
+  sync(); reserve();
 })();
 
 

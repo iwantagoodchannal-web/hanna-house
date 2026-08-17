@@ -693,3 +693,23 @@ body.on-still #rail,body.exploring #rail{display:none}
    nothing ever covers the box he is working in */
 #review-summary{transition:opacity .25s var(--ease), transform .25s var(--ease)}
 body.typing #review-summary{opacity:.14; pointer-events:none}
+
+/* ============================================================
+   REVIEW — he must LAND on a picture.
+   The intro was carrying its nav clearance twice (page padding-top
+   AND .review-intro padding-top), which pushed the first photo to
+   y=673 on a 390x844 phone — below the fold. All top clearance now
+   lives in one place.
+   ============================================================ */
+/* floor of 84px keeps a calm gap under the tab bar on short desktop windows,
+   where 9vh would otherwise leave the eyebrow 16px below the glass */
+.review-page{padding-top:clamp(84px,9vh,96px)}
+.review-intro{padding-top:0; margin-bottom:clamp(22px,4vh,56px)}
+.review-who{margin-top:clamp(20px,3vh,30px)}
+
+/* --- one visible action ---------------------------------------------------
+   "or send as an email" and "copy my notes" sat beside the primary button at
+   nearly equal weight. They are escape hatches, not choices: they appear only
+   if a send actually fails, alongside the error that makes them relevant. */
+#review-summary .review-alt{display:none}
+#review-summary.failed .review-alt{display:inline-block}
