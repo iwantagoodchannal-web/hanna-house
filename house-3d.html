@@ -210,7 +210,16 @@ const PLAN = {
     // WORKING zone — the counter run 196–393 (centre ≈294.5) / open floor to
     // the east counter (centre ≈298) — not the wall-to-wall midpoint. x 228–365,
     // centre 296.5. Final verify against the incoming phone video.
-    {id:'k_isl', t:'island',  x0:228,  x1:365,  z0:-32,  z1:-8,  h:36, oh:'w'},   // work-top half only
+    // C-64: z0 was −32. MEASURED from Scan C's point cloud (MEASURED.md M-11c).
+    // The island was never MISPLACED — it was 16.8" TOO DEEP on the north side.
+    // Two independent cloud measurements agree to 0.1": the aisle to k_cn's front
+    // reads 55.1" (model had 38.3"), and the island's face-to-face depth reads
+    // 43.3" (model had 60.0"). Both put the north face at z = −15.2, and both
+    // leave the SOUTH face at 28 exactly where 08-kitchen.js already had it.
+    // ⚠ This makes the work-top half 7.2" deep. The internal work-top/bar split
+    // (08-kitchen.js:95,224-226, hardcoded −8) is KITCHEN'S and needs re-proportioning
+    // — the footprint is measured, the split is not.
+    {id:'k_isl', t:'island',  x0:228,  x1:365,  z0:-15.2, z1:-8,  h:36, oh:'w'},   // work-top half only
     // C-57: 48" wide, not 45". Jake, 17 Aug: "the fridge itself is exactly four
     // feet wide" — flat, no hedge, and it supersedes the C-13 placeholder, which
     // never had a tape behind it. Grown SOUTH (z1 47→50), never north: C-44 pulled
@@ -583,7 +592,17 @@ const MAT={
   label:  new THREE.MeshPhysicalMaterial({color:0xe8e0cd,roughness:0.88}),
   alder:  W(0x653f1f,0.6,3),
   trav:   new THREE.MeshPhysicalMaterial({color:0xe4d6bc,roughness:0.72,map:SPLASH_TEX,normalMap:NRM.splash,normalScale:new THREE.Vector2(1.3,1.3)}),
-  beam:   W(0x241609,0.6,8),
+  // C-63b: was 0x241609. That hex was authored BY EYE against the undecoded
+  // pipeline, so it was already effectively a linear value. C-63 added 'beam' to
+  // the decode list — arithmetically right — and double-darkened it: 0x241609
+  // decodes to 0x040201, essentially pure black. Same pattern as C-49: the decode
+  // was right, the DEFAULT was never re-picked.
+  // 0x695335 decodes to exactly the linear triple the old value rendered with
+  // (0.1412 / 0.0863 / 0.0353), so this restores the pre-C-63 appearance EXACTLY
+  // while keeping the pipeline consistent. It is a HOLD, not a claim about the
+  // true colour — see C-63b for why MAT.beam is overloaded and needs re-picking
+  // per object from the photographs.
+  beam:   W(0x695335,0.6,8),
   vault:  new THREE.MeshStandardMaterial({color:0x8ba0b3,roughness:0.92,map:PLASTER_TEX}),
   basin:  M(0x6d7378,0.35),
   base:   W(0x4a2f1b,0.58,10),// stained baseboard, sec_048/132/133
@@ -1225,7 +1244,7 @@ PLAN.walls.forEach(buildWall);
   const ISL=PLAN.kitchen.find(k=>k.id==='k_isl');
   const ISLCX=ISL?(ISL.x0+ISL.x1)/2:296.5;
   panelsZ(-41.5,2,4,34,422);                            // range-leg base doors (C-44)
-  if(ISL) panelsZ(-32,-8,4,34,ISL.x0);                  // island west end, work-top half (C-46)
+  if(ISL) panelsZ(ISL.z0,ISL.z1,4,34,ISL.x0);           // island west end, work-top half (C-46)
 
   for(const q of PLAN.sinks){
     pbox(q.x0,q.x1,q.z0,q.z1,q.h+0.05,q.h+1.7,MAT.steel,G.kit);
@@ -1354,12 +1373,22 @@ PLAN.walls.forEach(buildWall);
     // C-42b: the raised bar tier was a slab hovering over the work top on a
     // 1/2" fin - Jake called it. It now sits on a real full-height bar base
     // (z -8 to +28) with panelled stool-side faces; work top is kitchen-side only.
-    pbox(i.x0,i.x1,-8,28,0,i.h+7.5,MAT.counter,G.kit);               // bar base body
-    pbox(i.x0,i.x1,-8.6,-8,i.h+1.5,i.h+7.5,MAT.trav,G.kit);          // travertine riser face
-    panelsX(i.x0,i.x1,4,40,28);                                       // stool-side panels
-    pbox(i.x0-1.5,i.x1+1.5,-9.5,43,i.h+7.5,i.h+9,MAT.stone,G.kit);   // bar top over the base
-    for(const bx of [i.x0+22,i.x0+68,i.x0+114])                       // bronze outlets
-      pbox(bx-2.2,bx+2.2,-8.75,-8.5,i.h+2.6,i.h+6.2,MAT.beam,G.kit);
+    // ⚠ THE ISLAND IS 60" DEEP, NOT 24". PLAN's k_isl is ONLY the work-top half
+    // (z -32..-8). Everything below adds the BAR half south of it, and until now
+    // its z was hardcoded — so editing k_isl.z0/z1 alone moved the work top and
+    // left the bar behind, splitting the island in two. Now every z is derived
+    // from k_isl.z1, so moving the PLAN entry moves the whole object.
+    //   work top   i.z0 .. i.z1          (PLAN)
+    //   bar base   i.z1 .. i.z1+BD       full height, panelled stool side
+    //   bar top    i.z1-1.5 .. i.z1+51   the +15" past the base is knee overhang
+    // Present-day values are unchanged: -8/28/-8.6/-9.5/43/-8.75.
+    const BD=36;                          // bar-base depth, C-42b
+    pbox(i.x0,i.x1,i.z1,i.z1+BD,0,i.h+7.5,MAT.counter,G.kit);          // bar base body
+    pbox(i.x0,i.x1,i.z1-0.6,i.z1,i.h+1.5,i.h+7.5,MAT.trav,G.kit);      // travertine riser
+    panelsX(i.x0,i.x1,4,40,i.z1+BD);                                    // stool-side panels
+    pbox(i.x0-1.5,i.x1+1.5,i.z1-1.5,i.z1+51,i.h+7.5,i.h+9,MAT.stone,G.kit); // bar top
+    for(const bx of [i.x0+22,i.x0+68,i.x0+114])                         // bronze outlets
+      pbox(bx-2.2,bx+2.2,i.z1-0.75,i.z1-0.5,i.h+2.6,i.h+6.2,MAT.beam,G.kit);
   })();
   for(const sx of PLAN.stools){                     // blue barrel-back stools, sec_126/127
     for(const [lx,lz] of [[-5,-5],[5,-5],[-5,5],[5,5]])
@@ -1373,11 +1402,17 @@ PLAN.walls.forEach(buildWall);
   // one large hammered-metal dome pendant over the island - it is the most
   // visible object in every kitchen frame and there was no light fitting at all
   const pd=new THREE.Mesh(new THREE.CylinderGeometry(3.5,12,9,22),MAT.dark);
-  pd.position.set(ISLCX,70.5,-14); G.kit.add(pd);            // over the island centre (C-46)
+  // Pendant z was a bare -14; now pinned 18" south of the island's north face so
+  // it travels with it. ⚠ THAT ANCHOR IS AN ASSUMPTION ABOUT INTENT, not a
+  // measurement: -14 is 18" south of today's z0, but equally 12" north of the
+  // island's full centre. Identical today either way. If the island gets
+  // shallower this hangs the pendant nearer the bar - flagged, not silently picked.
+  const ISLPZ=ISL?ISL.z0+18:-14;
+  pd.position.set(ISLCX,70.5,ISLPZ); G.kit.add(pd);          // over the island (C-46)
   // NOT A DERIVED HALF: the 75 is the pendant's TOP (dome centred at y 70.5,
   // 9" tall, so 66..75), and only coincidentally equals KV/2. If KV ever moves,
   // this 75 stays put - it is pinned to the pendant, not to the ceiling.
-  pbox(ISLCX-0.5,ISLCX+0.5,-14.5,-13.5,75,KV,MAT.dark,G.kit);  // cord to the vault
+  pbox(ISLCX-0.5,ISLCX+0.5,ISLPZ-0.5,ISLPZ+0.5,75,KV,MAT.dark,G.kit);  // cord to the vault
 })();
 
 /* ===================== furniture ===================== */
@@ -2426,3 +2461,4 @@ tick();
 </script>
 </body>
 </html>
+<!-- build:21e2137 -->
