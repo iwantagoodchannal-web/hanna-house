@@ -838,10 +838,15 @@ PLAN.walls.forEach(buildWall);
       const cy=H0+bh*(ri+0.5);
       for(let ci=0;ci<cols;ci++){
         const cxb=bx0+bw*(ci+0.5);
-        [1,-1].forEach(sg=>{const m=box(d,1.0,12.5,MAT.rack,cxb,cy,zc,grp);
+        // half-lap the X: both sticks used to sit at the same zc, so each pair
+        // shared its front AND back plane (345 coplanar pairs across the two
+        // schemes, on the most-looked-at surface in the room). 0.16" apart.
+        [1,-1].forEach(sg=>{const m=box(d,1.0,12.5,MAT.rack,cxb,cy,zc+sg*0.08,grp);
           m.rotation.z=sg*Math.atan2(bh,bw);});
       }
-      if(ri) pbox(bx0,bx1,wine.z0+1,wine.z1-1.5,H0+bh*ri-0.4,H0+bh*ri+0.4,MAT.rack,grp);
+      // tier rail sits 0.04" inside the dividers: sharing z with them put a
+      // coplanar pair on the visible bin face at every crossing
+      if(ri) pbox(bx0,bx1,wine.z0+1.04,wine.z1-1.54,H0+bh*ri-0.4,H0+bh*ri+0.4,MAT.rack,grp);
     }
     for(let ci=1;ci<cols;ci++)
       pbox(bx0+bw*ci-0.4,bx0+bw*ci+0.4,wine.z0+1,wine.z1-1.5,H0,H1,MAT.rack,grp);
@@ -864,10 +869,13 @@ PLAN.walls.forEach(buildWall);
       if(useNiche && x>nCx-nHW-1 && x<nCx+nHW+1) B(x,x+0.7,zc-6.5,zc+6.5,nY1,TOP,MAT.rack);
       else                                        B(x,x+0.7,zc-6.5,zc+6.5,LEDGE,TOP,MAT.rack);
     }
+    // shelves are let into the dividers — 0.04" shy of them front and back.
+    // At an equal zc every crossing was a coplanar pair on the rack's front
+    // face; ~690 of them in the MAX scheme alone.
     for(let y=LEDGE+0.5;y<TOP;y+=3.75){
-      if(useNiche && y<nY1){ B(iL,nCx-nHW,zc-6.5,zc+6.5,y,y+0.6,MAT.rack);
-                             B(nCx+nHW,iR,zc-6.5,zc+6.5,y,y+0.6,MAT.rack); }
-      else                   B(iL,iR,zc-6.5,zc+6.5,y,y+0.6,MAT.rack);
+      if(useNiche && y<nY1){ B(iL,nCx-nHW,zc-6.46,zc+6.46,y,y+0.6,MAT.rack);
+                             B(nCx+nHW,iR,zc-6.46,zc+6.46,y,y+0.6,MAT.rack); }
+      else                   B(iL,iR,zc-6.46,zc+6.46,y,y+0.6,MAT.rack);
     }
     // A real bottle profile - punt, body, shoulder, neck, lip - lathed and laid on
     // its side, so you can actually see how the wine sits in the rack. Per-bottle
@@ -941,7 +949,7 @@ PLAN.walls.forEach(buildWall);
 
   // coffee bay: base -> 40" landing -> open recess -> uppers
   const cL=cof.x0+FT, cR=cof.x1-FT;
-  const BW=(cR-cL)/3;                                              // FIX(12) 3 bays, drawer over doors
+  const BW=(cR-cL)/3;                                              // 3 bays, drawer over doors (C-10)
   for(let i=0;i<3;i++){
     const bx0=cL+i*BW,bx1=bx0+BW;
     pbox(bx0+0.5,bx1-0.5,cof.z0+1,cof.z1-1.2,4,28,MAT.wineB,G.cab);      // two doors
@@ -1004,7 +1012,10 @@ PLAN.walls.forEach(buildWall);
   // reads as a raw slab where it meets the hallway.
   pbox(wine.x0-0.75,wine.x0,wine.z0+0.3,wine.z1+0.3,0,H,MAT.wineA,G.cab);
   pbox(cof.x1,cof.x1+0.75,cof.z0+0.3,cof.z1+0.3,0,H,MAT.wineA,G.cab);
-  pbox(wine.x0-0.9,cof.x1+0.9,wine.z1+0.3,wine.z1+0.9,0,4.5,MAT.base,G.cab);   // toe kick
+  // TOE KICK REMOVED: it was pbox(-0.9,168.9, -1.7,-1.1, 0,4.5, MAT.base) —
+  // strictly inside the plinth three lines up (-1.2..169.2, -2.2..-0.8, 0..4.5)
+  // on all three axes, same material, so it rendered nothing and shared the
+  // plinth's y=0 and y=4.5 planes. The plinth IS the toe kick.
   // sec_048: a switch ~45" AFF and a receptacle ~16" AFF on the west-facing return
   (function(){
     const pl=(y0,y1,z0,z1)=>{const m=pbox(-8.3,-8.02,z0,z1,y0,y1,MAT.orb,G.walls);
@@ -1025,8 +1036,11 @@ PLAN.walls.forEach(buildWall);
     box(dW-6.5,sh,0.75,MAT.oak,cx,8.5+sh/2+i*(sh+gap),-0.95,G.door);
   for(const ex of [wine.x0+2.6, wine.x1-2.6])
     box(3.6,DT-9,1.0,MAT.slat,ex,(5+DT)/2,-0.75,G.door);                 // stiles
-  box(dW,3.6,1.0,MAT.slat,cx,DT-4.6,-0.75,G.door);                       // top rail
-  box(dW,5.0,1.0,MAT.slat,cx,7.2,-0.75,G.door);                          // bottom rail
+  // rails tenon BETWEEN the stiles, so they sit 0.04" behind them and 0.1"
+  // shy of the leaf edges. Flush at -0.75 they shared the stiles' front plane
+  // over both end laps — a coplanar pair on the leaf the tour flies up to.
+  box(dW-0.2,3.6,1.0,MAT.slat,cx,DT-4.6,-0.79,G.door);                   // top rail
+  box(dW-0.2,5.0,1.0,MAT.slat,cx,7.2,-0.79,G.door);                      // bottom rail
   for(const px of [wine.x0+7.5, wine.x1-7.5])
     box(1.2,10,1.3,MAT.steel,px,52,-0.45,G.door);                        // two pulls
   pbox(wine.x0-2,cof.x1+2,-2.0,-0.8,DT+0.3,DT+2.1,MAT.steel,G.cab);      // track is FIXED, not on the door
@@ -1231,7 +1245,10 @@ PLAN.walls.forEach(buildWall);
       EX(cxb+0.5,b,F,F+0.5,5.4,24.2,MAT.panel);
       for(const kx of [cxb-3,cxb+3]) EX(kx-0.6,kx+0.6,F+0.4,F+1.1,21,22.4,MAT.orb);
     }
-    if(i) EX(i*BW-0.4,i*BW+0.4,-19,F,4,CH-1.25,MAT.alder);
+    // 0.05" behind the carcass face: these dividers sit wholly inside the solid
+    // carcass (they render nothing), but flush at F they shared its front plane
+    // — and that plane IS exposed, in the 2.4" gaps between the door panels.
+    if(i) EX(i*BW-0.4,i*BW+0.4,-19,F-0.05,4,CH-1.25,MAT.alder);
   }
   EX(-1.2,L+1.2,-20,F+1.2,CH-1.25,CH,MAT.granite);         // granite, 1.25" with overhang
   EX(-1.4,L+1.4,-20.2,F+1.4,CH-2.6,CH-1.25,MAT.stone);     // chiselled rock-face edge
@@ -1259,7 +1276,7 @@ G.exist.visible=false;
   const W=(x0,x1,z0,z1,y0,y1,m)=>{const b=pbox(x0,x1,z0,z1,y0,y1,m,G.walls);b.userData={y0,y1};return b;};
   for(const [a,b] of PLAN.win_s){                      // south wall
     W(a,b,230.4,231.2,33,87,MAT.glass);
-    W(a-2.5,b+2.5,228.4,229.2,87,91.5,MAT.alder);      // head
+    W(a-2.5,b+2.5,228.43,229.17,87,91.5,MAT.alder);    // head, set between the jambs
     W(a-2.5,a,    228.4,229.2,29,91.5,MAT.alder);      // jambs
     W(b,   b+2.5, 228.4,229.2,29,91.5,MAT.alder);
     W(a-1.5,b+1.5,228.0,230.4,30.4,33,MAT.alder);      // stool + apron
@@ -1270,18 +1287,23 @@ G.exist.visible=false;
     const mx=(a+b)/2; W(mx-0.8,mx+0.8,230.2,231.4,33,87,MAT.alder);   // ONE mullion, 2 lites
   }
   W(-3.6,-2.8,152,206,33,87,MAT.glass);                // W14, west wall - BARE, no curtain
-  W(0,0.8,149.5,208.5,87,91.5,MAT.alder);              // head casing, room side
+  // head and stool are set 0.03" between the jambs — flush, all four shared the
+  // x=0.8 room-facing plane, which is the face you actually see
+  W(0.03,0.77,149.5,208.5,87,91.5,MAT.alder);          // head casing, room side
   W(0,0.8,149.5,152,29,91.5,MAT.alder);                // jambs
   W(0,0.8,206,208.5,29,91.5,MAT.alder);
-  W(0,0.8,150.5,207.5,30.4,33,MAT.alder);              // stool
+  W(0.03,0.77,150.5,207.5,30.4,33,MAT.alder);          // stool
   W(-3.8,-2.6,178.2,179.8,33,87,MAT.alder);            // ONE mullion
   // DR-W1, the MASK wall, is the EAST wall - sec_058 shows its free outside
   // corner with the island stools immediately past it. It was modelled on the
   // west. DR-W3, the short credenza wall, is the west one (sec_088, sec_117).
-  pbox(170,179.4,100,190,0,4,MAT.beam,G.furn);            // console: legged, open shelf
-  pbox(170,179.4,100,190,29,32,MAT.beam,G.furn);
-  pbox(170,179.4,100,190,14,15.6,MAT.beam,G.furn);
-  for(const cz of [101.6,143,188.4]) pbox(170,179.4,cz,cz+1.6,0,29,MAT.beam,G.furn);
+  // console: plinth, open shelf, top, three full-depth dividers. NOT legged —
+  // the 0..4 plinth runs the whole 90" footprint. Dividers are inset 0.03" so
+  // they no longer share the plinth's x=170 / x=179.4 / z=190 planes.
+  pbox(170,179.4,100,190,0,4,MAT.beam,G.furn);            // plinth
+  pbox(170,179.4,100,190,29,32,MAT.beam,G.furn);          // top
+  pbox(170,179.4,100,190,14,15.6,MAT.beam,G.furn);        // open shelf
+  for(const cz of [101.6,143,188.4]) pbox(170.03,179.37,cz,cz+1.57,0,29,MAT.beam,G.furn);
   // ten masks, irregular sizes and heights, several trailing 30-40" fibre hair
   (function(){
     const MK=[[97,6,86,9],[106,5,62,0],[113,8,78,34],[123,4.5,57,0],[129,7,90,0],
