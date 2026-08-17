@@ -595,3 +595,78 @@ body.on-still #rail,body.exploring #rail{display:none}
 @media (max-width:640px){
   .r-buttons .r-ok{flex:0 0 auto; max-width:none; width:100%}
 }
+
+/* ============================================================
+   REVIEW — restyled into the house palette.
+   The green was borrowed from nowhere in this design system and the
+   scale was shouting. Hierarchy now: the per-photo toggle is QUIET
+   (ivory + alder hairline when set), the one primary action is ALDER.
+   ============================================================ */
+
+/* --- the quiet confirm --- */
+.r-ok{
+  padding:14px 22px; border-radius:999px;
+  font-size:16px; font-weight:600; letter-spacing:.01em;
+  color:var(--muted); background:rgba(245,241,232,.7);
+  border:1px solid var(--hair); width:auto; max-width:none;
+}
+.r-ok:hover{border-color:rgba(29,26,22,.3); color:var(--ink)}
+.r-ok.on{
+  background:rgba(138,90,52,.09); border-color:var(--alder);
+  color:var(--alder); box-shadow:none;
+}
+.r-draw-btn{
+  padding:14px 22px; border-radius:999px;
+  font-size:16px; font-weight:600; color:var(--muted);
+  background:rgba(245,241,232,.7); border:1px solid var(--hair);
+}
+.r-draw-btn:hover{border-color:rgba(29,26,22,.3); color:var(--ink)}
+.r-draw-btn[aria-pressed="true"]{
+  background:var(--alder); border-color:var(--alder); color:var(--ivory);
+}
+.r-buttons{gap:10px}
+.r-buttons .r-ok{flex:0 0 auto}
+
+/* --- note box, calmer --- */
+.r-note textarea{
+  font-size:17px; padding:14px 16px; border-radius:12px;
+  border:1px solid var(--hair); background:rgba(255,255,255,.72);
+}
+.r-note textarea:focus{border-color:var(--alder); background:#fff}
+.review-card.noted .r-note textarea{border-color:var(--alder); background:#fff}
+.r-note span{font-size:15.5px}
+
+/* --- the send bar: one slim piece of glass --- */
+#review-summary{
+  gap:10px 16px;
+  padding:14px clamp(18px,4vw,32px) calc(14px + env(safe-area-inset-bottom));
+  background:rgba(245,241,232,.86);
+  backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+  border-top:1px solid var(--hair); box-shadow:none;
+}
+#review-send{
+  padding:12px 26px; border-radius:999px; border:1px solid var(--alder);
+  font-size:15.5px; font-weight:600; letter-spacing:.01em;
+  background:var(--alder); color:var(--ivory);
+  box-shadow:0 2px 10px rgba(138,90,52,.22);
+  transition:transform .25s var(--ease), box-shadow .25s var(--ease),
+             background .25s var(--ease);
+}
+#review-send:hover{transform:translateY(-1px);
+  box-shadow:0 6px 18px rgba(138,90,52,.30); background:#7c502d}
+#review-send[disabled]{opacity:.55; transform:none; box-shadow:none}
+.review-count{font-size:14px; color:var(--muted); letter-spacing:.01em}
+.review-status{font-size:14.5px}
+.review-status.ok{color:var(--alder); font-weight:600; font-size:15px}
+.review-alt{font-size:13.5px}
+
+/* nothing ever hides beneath the sticky bar */
+.review-gallery{padding-bottom:12px}
+
+@media (max-width:640px){
+  #review-summary{gap:8px 12px; padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
+  #review-send{width:auto; flex:1 1 auto; padding:14px 22px; font-size:16px}
+  .review-count{flex-basis:100%; order:-1; font-size:13.5px}
+  .r-buttons{flex-direction:row; flex-wrap:wrap}
+  .r-buttons .r-ok,.r-draw-btn{flex:1 1 auto; width:auto; text-align:center}
+}
