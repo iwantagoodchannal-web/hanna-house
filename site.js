@@ -424,13 +424,17 @@ document.querySelector('.wordmark').addEventListener('click', e=>{
 if(location.hash){ const h=location.hash.slice(1); if(pages.includes(h)&&h!=='wine-wall') setPage(h); }
 
 /* ---------- review page ----------
-   Deliberately simple for a non-technical reader: per picture, ONE button
-   ("looks good"), ONE box to type in, and optionally CIRCLE right on the
-   photo. One green Send button. Everything saves to localStorage as he goes,
-   so nothing is lost if the page closes; Send posts to Netlify Forms. */
+   Two areas (kitchen / wine closet), four views each. Every view can carry
+   1..3 VERSIONS of the same frame — 'today' (his photo), 'render' (the 3D
+   design), 'concept' (the finished look) — declared in REVIEW below. A card
+   with one version shows no switcher; adding one later is one line here plus
+   one image file, no markup change. Circles are stored PER VERSION, so the
+   submission carries exactly the image he drew on. Everything saves to
+   localStorage as he goes; Send posts to Netlify Forms (form name
+   design-review — do not rename it, dashboard notifications are wired). */
 (function(){
-  const cards = [...document.querySelectorAll('.review-card')];
-  if(!cards.length) return;
+  const galleryEl = document.getElementById('review-gallery');
+  if(!galleryEl) return;
   const countEl  = document.getElementById('review-count');
   const emailEl  = document.getElementById('review-email');
   const copyEl   = document.getElementById('review-copy');
@@ -439,16 +443,39 @@ if(location.hash){ const h=location.hash.slice(1); if(pages.includes(h)&&h!=='wi
   const nameEl   = document.getElementById('review-name');
   const summaryEl= document.getElementById('review-summary');
   const pageEl   = document.querySelector('.review-page');
-  const KEY = id => 'hh-review:'+id;
-  const entries = [];
+  const KEY = id => 'hh-review2:'+id;      // v2 namespace: marks keyed by version
 
-  /* Reserve exactly the room the floating pill occupies, measured rather than
-     guessed. The old hard-coded 168px cleared a 167px pill by one pixel — any
-     extra line (a status message, the failure fallbacks) started covering the
-     last card. This tracks the pill through every state. */
+  const VLABEL = {today:'Today', render:'The design', concept:'Finished look'};
+  const srcOf = (area, n, vk) => 'assets/review-'+area+'-'+n+'-'+vk+'.jpg';
+
+  /* ==== the one place photos and versions are declared ====
+     Photos are his walk order (IMG_3590–93 kitchen, IMG_3586–89 wine),
+     all portrait 1350×1800. When a render or finished-look lands, add its
+     key to v and drop the file in assets/ — nothing else changes. */
+  const REVIEW = [
+    {area:'kitchen', label:'Kitchen', cards:[
+      {n:1, title:'The sink window',   desc:'Across the island to the window and the pantry door.', ar:'3 / 4', v:['today']},
+      {n:2, title:'The range wall',    desc:'Cooktop, the tile medallion, and the uppers.',         ar:'3 / 4', v:['today']},
+      {n:3, title:'The whole kitchen', desc:'Range, ovens and the island in one look.',             ar:'3 / 4', v:['today']},
+      {n:4, title:'Toward the hallway',desc:'Past the island to the hallway and the red wall.',     ar:'3 / 4', v:['today']}
+    ]},
+    {area:'wine', label:'Wine closet', cards:[
+      {n:1, title:'The wall, straight on', desc:'The drop counter that becomes the wine closet — tape marks the new footprint.', ar:'3 / 4', v:['today']},
+      {n:2, title:'The uppers today',      desc:'The cabinet above the counter, and the tape line.', ar:'3 / 4', v:['today']},
+      {n:3, title:'The whole span',        desc:'The full run, tape measure across the floor.',      ar:'3 / 4', v:['today']},
+      {n:4, title:'The pantry corner',     desc:'Where the run meets the pantry door.',              ar:'3 / 4', v:['today']}
+    ]}
+  ];
+
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+  const entries = [];
+  function anyMarks(s){ return Object.values(s.marks).some(a=>a&&a.length); }
+  const isFlagged = e => e.s.note.trim() || anyMarks(e.s);
+
+  /* pill reservation — measured, not guessed */
   function reserve(){
     const h = summaryEl.getBoundingClientRect().height;
-    if(!h) return;                       // page hidden — remeasured when shown
+    if(!h) return;
     pageEl.style.paddingBottom = Math.round(h + 40) + 'px';
   }
   if(window.ResizeObserver) new ResizeObserver(reserve).observe(summaryEl);
@@ -459,69 +486,107 @@ if(location.hash){ const h=location.hash.slice(1); if(pages.includes(h)&&h!=='wi
     try{ localStorage.setItem('hh-review:name', nameEl.value); }catch(e){}
   });
 
-  cards.forEach(card => {
-    const id = card.dataset.still;
-    const title = card.querySelector('h3').textContent.trim();
-    const s = {ok:false, note:'', marks:[]};
+  /* ==== build the cards ==== */
+  REVIEW.forEach(A => A.cards.forEach(c => {
+    const id = A.area+'-'+c.n;
+    const card = document.createElement('article');
+    card.className = 'review-card';
+    card.dataset.still = id; card.dataset.area = A.area;
+    card.innerHTML =
+      '<div class="r-stage" style="aspect-ratio:'+c.ar+'">'+
+        c.v.map((vk,i)=>'<img class="r-img'+(i?'':' on')+'" data-v="'+vk+
+          '" src="'+srcOf(A.area,c.n,vk)+'" alt="'+esc(c.title)+' — '+VLABEL[vk]+
+          '" loading="lazy" draggable="false">').join('')+
+        '<canvas class="r-draw" aria-hidden="true"></canvas>'+
+      '</div>'+
+      (c.v.length>1 ? '<div class="r-variants" role="group" aria-label="Version of '+
+        esc(c.title)+'">'+
+        c.v.map((vk,i)=>'<button class="v-btn'+(i?'':' on')+'" data-v="'+vk+
+          '" aria-pressed="'+(!i)+'">'+VLABEL[vk]+'</button>').join('')+'</div>' : '')+
+      '<h3>'+esc(c.title)+'</h3><p class="desc">'+esc(c.desc)+'</p>'+
+      '<div class="r-buttons">'+
+        '<button class="r-ok" aria-pressed="false">This one looks good</button>'+
+        '<button class="r-draw-btn" aria-pressed="false">Circle on the photo</button>'+
+        '<button class="r-clear" hidden>erase circles</button>'+
+      '</div>'+
+      '<label class="r-note"><span>Want something changed? Circle it above, or type it here.</span>'+
+      '<textarea rows="3" aria-label="Changes for '+esc(c.title)+'"></textarea></label>';
+    galleryEl.appendChild(card);
+
+    const s = {ok:false, note:'', marks:{}};
     try{ Object.assign(s, JSON.parse(localStorage.getItem(KEY(id)) || '{}')); }catch(e){}
-    if(!Array.isArray(s.marks)) s.marks = [];
-    entries.push({id, title, s});
+    if(!s.marks || typeof s.marks !== 'object' || Array.isArray(s.marks)) s.marks = {};
+    entries.push({id, title:c.title, area:A.area, areaLabel:A.label, n:c.n, s});
 
     const ok  = card.querySelector('.r-ok');
     const ta  = card.querySelector('textarea');
-    const img = card.querySelector('img');
+    const stage = card.querySelector('.r-stage');
+    const imgs = {}; card.querySelectorAll('.r-img').forEach(im=>imgs[im.dataset.v]=im);
     const cv  = card.querySelector('canvas.r-draw');
     const drawBtn = card.querySelector('.r-draw-btn');
     const clrBtn  = card.querySelector('.r-clear');
+    let curV = c.v[0];
     ta.value = s.note || '';
 
-    /* ---- circle-on-photo ----
-       Strokes are stored as fractions of the image box, so they replay
-       correctly at any screen size and survive a reload. */
+    /* ---- circle-on-photo, per version ----
+       Strokes are fractions of the stage box, so they replay at any size and
+       survive a reload. s.marks = { today:[strokes], render:[strokes], ... } */
     const ctx = cv.getContext('2d');
+    const strokes = ()=> s.marks[curV] || [];
     function fit(){
-      const r = img.getBoundingClientRect();
+      const r = stage.getBoundingClientRect();
       if(!r.width) return;
       const dpr = Math.min(devicePixelRatio || 1, 2);
-      cv.width = Math.round(r.width * dpr);
-      cv.height = Math.round(r.height * dpr);
-      cv.style.width = r.width + 'px'; cv.style.height = r.height + 'px';
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      cv.width = Math.round(r.width*dpr); cv.height = Math.round(r.height*dpr);
+      cv.style.width = r.width+'px'; cv.style.height = r.height+'px';
+      ctx.setTransform(dpr,0,0,dpr,0,0);
       redraw();
     }
     function redraw(){
       const r = cv.getBoundingClientRect();
-      ctx.clearRect(0, 0, r.width, r.height);
-      ctx.strokeStyle = '#d2452c'; ctx.lineWidth = 4;
-      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-      s.marks.forEach(stroke => {
-        if(stroke.length < 2) return;
+      ctx.clearRect(0,0,r.width,r.height);
+      ctx.strokeStyle='#d2452c'; ctx.lineWidth=4; ctx.lineCap='round'; ctx.lineJoin='round';
+      strokes().forEach(st=>{
+        if(st.length<2) return;
         ctx.beginPath();
-        stroke.forEach((p, i) => {
-          const x = p[0]*r.width, y = p[1]*r.height;
-          i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
-        });
+        st.forEach((p,i)=>{ const x=p[0]*r.width, y=p[1]*r.height;
+          i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
         ctx.stroke();
       });
-      card.classList.toggle('marked', s.marks.length > 0);
-      clrBtn.hidden = s.marks.length === 0;
+      card.classList.toggle('marked', anyMarks(s));
+      clrBtn.hidden = !strokes().length;
+      clrBtn.textContent = c.v.length>1
+        ? 'erase circles on “'+VLABEL[curV]+'”' : 'erase circles';
     }
-    let drawing = false, cur = null;
-    const pt = e => {
-      const r = cv.getBoundingClientRect();
-      return [(e.clientX - r.left)/r.width, (e.clientY - r.top)/r.height];
-    };
-    cv.addEventListener('pointerdown', e => {
+    let drawing=false, cur=null;
+    const pt = e => { const r=cv.getBoundingClientRect();
+      return [(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height]; };
+    cv.addEventListener('pointerdown', e=>{
       if(!card.classList.contains('drawing')) return;
-      drawing = true; cur = [pt(e)]; s.marks.push(cur);
+      drawing=true; cur=[pt(e)];
+      (s.marks[curV] = s.marks[curV] || []).push(cur);
       cv.setPointerCapture(e.pointerId); e.preventDefault();
     });
-    cv.addEventListener('pointermove', e => {
+    cv.addEventListener('pointermove', e=>{
       if(!drawing) return; cur.push(pt(e)); redraw(); e.preventDefault();
     });
-    const endStroke = ()=>{ if(!drawing) return; drawing = false; save(); };
+    const endStroke = ()=>{ if(!drawing) return; drawing=false; save(); };
     cv.addEventListener('pointerup', endStroke);
     cv.addEventListener('pointercancel', endStroke);
+
+    /* version switch — the canvas follows: each version shows only its own circles */
+    function setV(vk){
+      if(vk===curV) return;
+      curV = vk;
+      Object.entries(imgs).forEach(([k,im])=>im.classList.toggle('on', k===vk));
+      card.querySelectorAll('.v-btn').forEach(b=>{
+        const on = b.dataset.v===vk;
+        b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+      });
+      redraw();
+    }
+    card.querySelectorAll('.v-btn').forEach(b=>
+      b.addEventListener('click', ()=>setV(b.dataset.v)));
 
     drawBtn.addEventListener('click', ()=>{
       const on = !card.classList.contains('drawing');
@@ -530,126 +595,162 @@ if(location.hash){ const h=location.hash.slice(1); if(pages.includes(h)&&h!=='wi
       drawBtn.textContent = on ? 'Done circling' : 'Circle on the photo';
       if(on) fit();
     });
-    clrBtn.addEventListener('click', ()=>{ s.marks = []; save(); });
+    clrBtn.addEventListener('click', ()=>{ delete s.marks[curV]; save(); });
 
     const paint = ()=>{
       ok.classList.toggle('on', !!s.ok);
       ok.setAttribute('aria-pressed', !!s.ok);
-      ok.textContent = s.ok ? '\u2713 Looks good' : 'This one looks good';
+      ok.textContent = s.ok ? '✓ Looks good' : 'This one looks good';
       card.classList.toggle('noted', !!s.note.trim());
     };
     function save(){
       try{ localStorage.setItem(KEY(id), JSON.stringify(s)); }catch(e){}
       paint(); redraw(); sync();
     }
-    ok.addEventListener('click', ()=>{ s.ok = !s.ok; save(); });
-    ta.addEventListener('input', ()=>{ s.note = ta.value; save(); });
-    /* fade the sign-off pill down while this box has focus */
+    ok.addEventListener('click', ()=>{ s.ok=!s.ok; save(); });
+    ta.addEventListener('input', ()=>{ s.note=ta.value; save(); });
     ta.addEventListener('focus', ()=>document.body.classList.add('typing'));
     ta.addEventListener('blur',  ()=>document.body.classList.remove('typing'));
-    if(img.complete) fit(); else img.addEventListener('load', fit);
+    Object.values(imgs).forEach(im=>{
+      if(im.complete) fit();
+      else im.addEventListener('load', ()=>{ if(im.dataset.v===curV) fit(); });
+    });
     addEventListener('resize', fit);
-    paint();
-  });
+    paint(); redraw();
+  }));
+
+  /* ==== area tabs ==== */
+  const areaTabs = [...document.querySelectorAll('.area-tab')];
+  function setArea(key){
+    galleryEl.dataset.area = key;
+    areaTabs.forEach(t=>{
+      const on = t.dataset.area===key;
+      t.classList.toggle('on', on); t.setAttribute('aria-selected', on);
+    });
+    try{ localStorage.setItem('hh-review2:area', key); }catch(e){}
+  }
+  areaTabs.forEach(t=>t.addEventListener('click', ()=>setArea(t.dataset.area)));
+  try{ const a = localStorage.getItem('hh-review2:area');
+       if(a && areaTabs.some(t=>t.dataset.area===a)) setArea(a); }catch(e){}
 
   function summary(){
-    const flagged = entries.filter(e => e.s.note.trim() || e.s.marks.length);
-    const oks = entries.filter(e => e.s.ok && !e.s.note.trim() && !e.s.marks.length);
+    const flagged = entries.filter(isFlagged);
+    const oks = entries.filter(e => e.s.ok && !isFlagged(e));
     const date = new Date().toLocaleDateString(undefined,
       {year:'numeric', month:'long', day:'numeric'});
     const who = (nameEl.value || '').trim();
-    let body = 'Wine wall review' + (who ? ' from ' + who : '') + ' \u2014 ' + date + '\n';
+    let body = 'Design review'+(who?' from '+who:'')+' — '+date+'\n';
     if(flagged.length){
       body += '\nCHANGES ASKED FOR:\n';
-      flagged.forEach(e => {
-        body += '\n* ' + e.title + '\n';
-        if(e.s.note.trim()) body += '  ' + e.s.note.trim() + '\n';
-        if(e.s.marks.length) body += '  [circled ' + e.s.marks.length +
-          ' spot' + (e.s.marks.length>1?'s':'') + ' on the photo \u2014 see attached image]\n';
+      flagged.forEach(e=>{
+        body += '\n* ['+e.areaLabel+'] '+e.title+'\n';
+        if(e.s.note.trim()) body += '  '+e.s.note.trim()+'\n';
+        Object.entries(e.s.marks).forEach(([vk,st])=>{
+          if(!st || !st.length) return;
+          body += '  [circled '+st.length+' spot'+(st.length>1?'s':'')+
+                  ' on the “'+(VLABEL[vk]||vk)+'” image — see attached]\n';
+        });
       });
     }
     if(oks.length){
       body += '\nLOOKS GOOD:\n';
-      oks.forEach(e => { body += '- ' + e.title + '\n'; });
+      oks.forEach(e=>{ body += '- ['+e.areaLabel+'] '+e.title+'\n'; });
     }
     if(!flagged.length && !oks.length) body += '\n(nothing marked yet)\n';
     return {flagged, oks, date, body, who};
   }
 
-  /* Flatten photo + his circles into one real image file per marked view, so
-     Jake sees exactly what was circled. Sent as multipart file uploads (not
-     base64 text fields) — that is Netlify's supported path for images and it
-     keeps the submission well clear of text-field size limits. */
+  /* Flatten photo + circles into one real image per (view, version) drawn on —
+     the submission carries exactly the image he circled, named for it:
+     circled-<area>-<n>-<version>.jpg */
   function markedBlobs(){
-    return Promise.all(entries.map((e, i) => {
-      if(!e.s.marks.length) return null;
-      const img = cards[i].querySelector('img');
-      const W = 1200, H = Math.round(W * (img.naturalHeight/img.naturalWidth || 0.5625));
-      const c = document.createElement('canvas'); c.width = W; c.height = H;
-      const x = c.getContext('2d');
-      try{ x.drawImage(img, 0, 0, W, H); }catch(err){ return null; }
-      x.strokeStyle = '#d2452c'; x.lineWidth = 6; x.lineCap = 'round'; x.lineJoin = 'round';
-      e.s.marks.forEach(stroke => {
-        if(stroke.length < 2) return;
-        x.beginPath();
-        stroke.forEach((p, k) => k ? x.lineTo(p[0]*W, p[1]*H) : x.moveTo(p[0]*W, p[1]*H));
-        x.stroke();
+    const jobs = [];
+    entries.forEach(e=>{
+      Object.entries(e.s.marks).forEach(([vk,st])=>{
+        if(st && st.length) jobs.push({e, vk, st});
       });
-      return new Promise(res => {
-        const name = 'circled-' + e.id.replace(/[^\w-]+/g,'') + '.jpg';
-        if(c.toBlob) c.toBlob(b => res(b ? new File([b], name, {type:'image/jpeg'}) : null),
-                              'image/jpeg', 0.82);
+    });
+    return Promise.all(jobs.map(j=>new Promise(res=>{
+      const img = new Image();
+      const done = ok=>{
+        if(!ok || !img.naturalWidth) return res(null);
+        const W=1200, H=Math.round(W*(img.naturalHeight/img.naturalWidth||0.75));
+        const cnv=document.createElement('canvas'); cnv.width=W; cnv.height=H;
+        const x=cnv.getContext('2d');
+        try{ x.drawImage(img,0,0,W,H); }catch(err){ return res(null); }
+        x.strokeStyle='#d2452c'; x.lineWidth=6; x.lineCap='round'; x.lineJoin='round';
+        j.st.forEach(stk=>{
+          if(stk.length<2) return;
+          x.beginPath();
+          stk.forEach((p,k)=>k?x.lineTo(p[0]*W,p[1]*H):x.moveTo(p[0]*W,p[1]*H));
+          x.stroke();
+        });
+        const name='circled-'+j.e.id+'-'+j.vk+'.jpg';
+        if(cnv.toBlob) cnv.toBlob(b=>res(b?new File([b],name,{type:'image/jpeg'}):null),
+                                  'image/jpeg', 0.82);
         else res(null);
-      });
-    }).filter(Boolean)).then(a => a.filter(Boolean));
+      };
+      img.onload=()=>done(true); img.onerror=()=>done(false);
+      img.src = srcOf(j.e.area, j.e.n, j.vk);
+      setTimeout(()=>done(img.complete), 8000);
+    }))).then(a=>a.filter(Boolean));
   }
 
   function sync(){
-    const {flagged, oks, date} = summary();
-    countEl.textContent = flagged.length
-      ? flagged.length + (flagged.length === 1 ? ' change' : ' changes') +
-        ' \u00b7 ' + oks.length + ' approved'
-      : (oks.length ? oks.length + ' marked good' : 'Mark the pictures above, then send');
-    emailEl.href = 'mailto:iwantagoodchannal@gmail.com' +
-      '?subject=' + encodeURIComponent('Wine wall review \u2014 ' + date) +
-      '&body=' + encodeURIComponent(summary().body);
+    const {flagged, oks, date, body} = summary();
+    const untouched = REVIEW.filter(A =>
+      entries.filter(e=>e.area===A.area).every(e=>!e.s.ok && !isFlagged(e)))
+      .map(A=>A.label);
+    let t;
+    if(!flagged.length && !oks.length){
+      t = 'Mark the pictures, then send';
+    }else{
+      t = (flagged.length ? flagged.length+(flagged.length===1?' change':' changes') : '')+
+          (flagged.length && oks.length ? ' · ' : '')+
+          (oks.length ? oks.length+' approved' : '');
+      if(untouched.length) t += ' · '+untouched.join(' & ')+' still to look at';
+    }
+    countEl.textContent = t;
+    emailEl.href = 'mailto:iwantagoodchannal@gmail.com'+
+      '?subject='+encodeURIComponent('Design review — '+date)+
+      '&body='+encodeURIComponent(body);
   }
 
   sendEl.addEventListener('click', ()=>{
     const {flagged, oks, date, body, who} = summary();
-    const say = (msg, cls)=>{ statusEl.textContent = msg;
-      statusEl.className = 'review-status ' + (cls || ''); };
-    sendEl.disabled = true; sendEl.textContent = 'Sending\u2026'; say('');
-    markedBlobs().then(files => {
+    const say=(msg,cls)=>{ statusEl.textContent=msg;
+      statusEl.className='review-status '+(cls||''); };
+    sendEl.disabled=true; sendEl.textContent='Sending…'; say('');
+    markedBlobs().then(files=>{
       const fd = new FormData();
-      fd.append('form-name', 'design-review');
+      fd.append('form-name','design-review');
       fd.append('reviewer', who || 'not given');
       fd.append('submitted', date);
       fd.append('approved', String(oks.length));
       fd.append('changes', String(flagged.length));
       fd.append('review', body);
-      files.forEach(f => fd.append('circled', f, f.name));
-      return fetch('/', {method:'POST', body: fd}).then(r => {
+      files.forEach(f=>fd.append('circled', f, f.name));
+      return fetch('/', {method:'POST', body:fd}).then(r=>{
         if(!r.ok) throw new Error(r.status);
-        sendEl.textContent = '\u2713 Sent';
-        say('Thank you \u2014 Jake has your notes' +
-            (files.length ? ' and your circled photos.' : '.'), 'ok');
+        sendEl.textContent='✓ Sent';
+        say('Thank you — Jake has your notes'+
+            (files.length?' and your circled photos.':'.'), 'ok');
       });
     })
-    .catch(() => { sendEl.disabled = false; sendEl.textContent = 'Send to Jake';
+    .catch(()=>{ sendEl.disabled=false; sendEl.textContent='Send to Jake';
       /* only now do the fallbacks earn their place on screen */
       summaryEl.classList.add('failed');
-      say('That didn\u2019t go through. Tap \u201cor send as an email\u201d below.', 'err');
+      say('That didn’t go through. Tap “or send as an email” below.', 'err');
       reserve();
     });
   });
 
   copyEl.addEventListener('click', ()=>{
     const t = summary().body;
-    const done = ()=>{ copyEl.textContent = 'copied';
-      setTimeout(()=>{ copyEl.textContent = 'copy my notes'; }, 1600); };
+    const done=()=>{ copyEl.textContent='copied';
+      setTimeout(()=>{ copyEl.textContent='copy my notes'; },1600); };
     if(navigator.clipboard && navigator.clipboard.writeText)
-      navigator.clipboard.writeText(t).then(done, done);
+      navigator.clipboard.writeText(t).then(done,done);
     else done();
   });
   sync(); reserve();

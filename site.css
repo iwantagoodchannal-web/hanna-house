@@ -713,3 +713,77 @@ body.typing #review-summary{opacity:.14; pointer-events:none}
    if a send actually fails, alongside the error that makes them relevant. */
 #review-summary .review-alt{display:none}
 #review-summary.failed .review-alt{display:inline-block}
+
+/* ============================================================
+   REVIEW v2 — two areas (kitchen / wine closet), version stacks.
+   Each card's stage can hold 1..3 versions of the same frame;
+   the switcher uses WORDS, not dots — an older reader on a phone
+   should never have to guess what a control means.
+   ============================================================ */
+:root{--wine-acc:#713031}   /* bordeaux, in-family with the alder */
+
+/* --- the two clickers at the top --- */
+.area-tabs{
+  display:flex; gap:10px; max-width:980px;
+  margin:0 auto clamp(24px,4vh,40px);
+}
+.area-tab{
+  flex:1 1 0; padding:15px 18px; border-radius:999px; text-align:center;
+  font-size:17.5px; font-weight:600; color:var(--muted);
+  background:rgba(245,241,232,.7); border:1px solid var(--hair);
+  transition:background .25s var(--ease), color .25s var(--ease),
+             border-color .25s var(--ease);
+}
+.area-tab:hover{border-color:rgba(29,26,22,.3); color:var(--ink)}
+.area-tab[data-area="kitchen"].on{background:var(--alder);
+  border-color:var(--alder); color:var(--ivory)}
+.area-tab[data-area="wine"].on{background:var(--wine-acc);
+  border-color:var(--wine-acc); color:var(--ivory)}
+
+/* one area on screen at a time; the accent colour follows the area */
+.review-gallery[data-area="kitchen"]{--area-acc:var(--alder)}
+.review-gallery[data-area="wine"]{--area-acc:var(--wine-acc)}
+.review-gallery[data-area="kitchen"] .review-card[data-area="wine"],
+.review-gallery[data-area="wine"] .review-card[data-area="kitchen"]{display:none}
+
+/* --- the stage owns the frame now; versions stack inside it --- */
+.r-stage{
+  position:relative; border-radius:18px; overflow:hidden;
+  border:1px solid var(--hair);
+  box-shadow:0 10px 34px rgba(29,26,22,.10);
+  background:linear-gradient(160deg,#efe9dc,#e4dcc9);
+}
+.r-stage .r-img{
+  position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+  border:0; border-radius:0; box-shadow:none;
+  opacity:0; transition:opacity .45s var(--ease);
+}
+.r-stage .r-img.on{opacity:1}
+.review-card.marked .r-stage{
+  box-shadow:0 0 0 2px #d2452c, 0 10px 34px rgba(29,26,22,.10)}
+.review-card.marked .r-stage img{box-shadow:none}
+
+/* --- version switcher: large word-pills under the photo --- */
+.r-variants{display:flex; gap:8px; margin:14px 0 0}
+.v-btn{
+  flex:1 1 0; padding:13px 10px; border-radius:999px; text-align:center;
+  font-size:15.5px; font-weight:600; color:var(--muted);
+  background:rgba(245,241,232,.7); border:1px solid var(--hair);
+  transition:background .25s var(--ease), color .25s var(--ease),
+             border-color .25s var(--ease);
+}
+.v-btn:hover{border-color:rgba(29,26,22,.3); color:var(--ink)}
+.v-btn.on{background:var(--area-acc,var(--alder));
+  border-color:var(--area-acc,var(--alder)); color:var(--ivory)}
+
+/* quiet controls pick up the area accent */
+.r-ok.on{border-color:var(--area-acc,var(--alder));
+  color:var(--area-acc,var(--alder))}
+.review-gallery[data-area="wine"] .r-ok.on{background:rgba(113,48,49,.08)}
+.review-card.noted .r-note textarea{border-color:var(--area-acc,var(--alder))}
+.r-note textarea:focus{border-color:var(--area-acc,var(--alder))}
+
+@media (max-width:640px){
+  .area-tabs{gap:8px}
+  .area-tab{padding:13px 10px; font-size:16px}
+}

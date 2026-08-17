@@ -198,8 +198,9 @@
   <header class="review-intro">
     <p class="eyebrow">Design review</p>
     <h2>Tell us what you think.</h2>
-    <p class="lede">Eight views of the new wine wall. Tap <strong>Looks good</strong>,
-       or circle and type what you'd change. Then press <strong>Send to Jake</strong>.</p>
+    <p class="lede">The kitchen and the wine closet, four views each.
+       Tap <strong>Looks good</strong>, or circle and type what you'd change.
+       Then press <strong>Send to Jake</strong>.</p>
     <label class="review-who">
       <span>Your name</span>
       <input type="text" id="review-name" autocomplete="name" placeholder="Your name">
@@ -217,153 +218,15 @@
     <input type="text" name="bot-field">
   </form>
 
-  <div class="review-gallery" id="review-gallery">
-
-    <article class="review-card" data-still="review-01-the-wall">
-      <div class="r-stage">
-        <img src="assets/review-01-the-wall.jpg" alt="The full wine wall, straight on" loading="lazy">
-        <canvas class="r-draw" aria-hidden="true"></canvas>
-      </div>
-      <h3>The wall</h3>
-      <p class="desc">All fourteen feet, straight on from the dining room.</p>
-      <div class="r-buttons">
-        <button class="r-ok" aria-pressed="false">This one looks good</button>
-        <button class="r-draw-btn" aria-pressed="false">Circle on the photo</button>
-        <button class="r-clear" hidden>erase circles</button>
-      </div>
-      <label class="r-note">
-        <span>Want something changed? Circle it above, or type it here.</span>
-        <textarea rows="3" aria-label="Changes for The wall"></textarea>
-      </label>
-    </article>
-
-    <article class="review-card" data-still="review-02-the-reveal">
-      <div class="r-stage">
-        <img src="assets/review-02-the-reveal.jpg" alt="The slat door half open across the wine bay" loading="lazy">
-        <canvas class="r-draw" aria-hidden="true"></canvas>
-      </div>
-      <h3>The reveal</h3>
-      <p class="desc">The slat door halfway across the wine bay.</p>
-      <div class="r-buttons">
-        <button class="r-ok" aria-pressed="false">This one looks good</button>
-        <button class="r-draw-btn" aria-pressed="false">Circle on the photo</button>
-        <button class="r-clear" hidden>erase circles</button>
-      </div>
-      <label class="r-note">
-        <span>Want something changed? Circle it above, or type it here.</span>
-        <textarea rows="3" aria-label="Changes for The reveal"></textarea>
-      </label>
-    </article>
-
-    <article class="review-card" data-still="review-03-inside">
-      <div class="r-stage">
-        <img src="assets/review-03-inside.jpg" alt="Inside the wine bay with the door fully open" loading="lazy">
-        <canvas class="r-draw" aria-hidden="true"></canvas>
-      </div>
-      <h3>Inside the wine bay</h3>
-      <p class="desc">Stemware at eye level, bulk storage below the stone ledge.</p>
-      <div class="r-buttons">
-        <button class="r-ok" aria-pressed="false">This one looks good</button>
-        <button class="r-draw-btn" aria-pressed="false">Circle on the photo</button>
-        <button class="r-clear" hidden>erase circles</button>
-      </div>
-      <label class="r-note">
-        <span>Want something changed? Circle it above, or type it here.</span>
-        <textarea rows="3" aria-label="Changes for Inside the wine bay"></textarea>
-      </label>
-    </article>
-
-    <article class="review-card" data-still="review-04-niche">
-      <div class="r-stage">
-        <img src="assets/review-04-niche.jpg" alt="The display niche, looking up" loading="lazy">
-        <canvas class="r-draw" aria-hidden="true"></canvas>
-      </div>
-      <h3>The display niche</h3>
-      <p class="desc">The lit shelf and the 259-bottle display layout.</p>
-      <div class="r-buttons">
-        <button class="r-ok" aria-pressed="false">This one looks good</button>
-        <button class="r-draw-btn" aria-pressed="false">Circle on the photo</button>
-        <button class="r-clear" hidden>erase circles</button>
-      </div>
-      <label class="r-note">
-        <span>Want something changed? Circle it above, or type it here.</span>
-        <textarea rows="3" aria-label="Changes for The display niche"></textarea>
-      </label>
-    </article>
-
-    <article class="review-card" data-still="review-05-coffee">
-      <div class="r-stage">
-        <img src="assets/review-05-coffee.jpg" alt="The coffee bay, three-quarter view" loading="lazy">
-        <canvas class="r-draw" aria-hidden="true"></canvas>
-      </div>
-      <h3>The coffee bay</h3>
-      <p class="desc">The 40-inch stone landing where the machines live.</p>
-      <div class="r-buttons">
-        <button class="r-ok" aria-pressed="false">This one looks good</button>
-        <button class="r-draw-btn" aria-pressed="false">Circle on the photo</button>
-        <button class="r-clear" hidden>erase circles</button>
-      </div>
-      <label class="r-note">
-        <span>Want something changed? Circle it above, or type it here.</span>
-        <textarea rows="3" aria-label="Changes for The coffee bay"></textarea>
-      </label>
-    </article>
-
-    <article class="review-card" data-still="review-06-uppers">
-      <div class="r-stage">
-        <img src="assets/review-06-uppers.jpg" alt="The upper glass cabinets, looking up" loading="lazy">
-        <canvas class="r-draw" aria-hidden="true"></canvas>
-      </div>
-      <h3>The uppers</h3>
-      <p class="desc">Cups behind glass, lit from below.</p>
-      <div class="r-buttons">
-        <button class="r-ok" aria-pressed="false">This one looks good</button>
-        <button class="r-draw-btn" aria-pressed="false">Circle on the photo</button>
-        <button class="r-clear" hidden>erase circles</button>
-      </div>
-      <label class="r-note">
-        <span>Want something changed? Circle it above, or type it here.</span>
-        <textarea rows="3" aria-label="Changes for The uppers"></textarea>
-      </label>
-    </article>
-
-    <article class="review-card" data-still="review-07-before">
-      <div class="r-stage">
-        <img src="assets/review-07-before.jpg" alt="The existing drop counter today" loading="lazy">
-        <canvas class="r-draw" aria-hidden="true"></canvas>
-      </div>
-      <h3>The room today</h3>
-      <p class="desc">The drop counter as it stands — same camera as the first view.</p>
-      <div class="r-buttons">
-        <button class="r-ok" aria-pressed="false">This one looks good</button>
-        <button class="r-draw-btn" aria-pressed="false">Circle on the photo</button>
-        <button class="r-clear" hidden>erase circles</button>
-      </div>
-      <label class="r-note">
-        <span>Want something changed? Circle it above, or type it here.</span>
-        <textarea rows="3" aria-label="Changes for The room today"></textarea>
-      </label>
-    </article>
-
-    <article class="review-card" data-still="review-08-kitchen">
-      <div class="r-stage">
-        <img src="assets/review-08-kitchen.jpg" alt="Looking toward the kitchen" loading="lazy">
-        <canvas class="r-draw" aria-hidden="true"></canvas>
-      </div>
-      <h3>Toward the kitchen</h3>
-      <p class="desc">Where the piece ends and the next project begins.</p>
-      <div class="r-buttons">
-        <button class="r-ok" aria-pressed="false">This one looks good</button>
-        <button class="r-draw-btn" aria-pressed="false">Circle on the photo</button>
-        <button class="r-clear" hidden>erase circles</button>
-      </div>
-      <label class="r-note">
-        <span>Want something changed? Circle it above, or type it here.</span>
-        <textarea rows="3" aria-label="Changes for Toward the kitchen"></textarea>
-      </label>
-    </article>
-
+  <div class="area-tabs" role="tablist" aria-label="Which room">
+    <button class="area-tab on" role="tab" aria-selected="true" data-area="kitchen">Kitchen</button>
+    <button class="area-tab" role="tab" aria-selected="false" data-area="wine">Wine closet</button>
   </div>
+
+  <!-- cards are built by site.js from its REVIEW config: one card per view,
+       each view carrying 1..3 versions of the same frame (today / the design
+       / finished look). Adding a version later is config + an image file. -->
+  <div class="review-gallery" id="review-gallery" data-area="kitchen"></div>
 
   <div id="review-summary" role="region" aria-label="Review summary" aria-live="polite">
     <button id="review-send">Send to Jake</button>
