@@ -1510,19 +1510,30 @@ G.ceil.visible=false;
   // C-49: beam tops stopped at exactly 118 — the ceiling plane — so every beam
   // top face z-fought the ceiling ("supports… flickering in hollow", Jake).
   // 117.6 tucks them under the 117.65 ceiling face: solid timber, no fight.
-  // The north-edge beam and the tile-passage rhythm both claimed z = 65..81. As
-  // authored they overlap by 4" over the full 194" run, so the north edge renders
-  // as ONE 16"-wide beam where C-47 says 10", and the two bottom faces are
-  // coincident at y = 106 across 778 in2. The passage loop now skips any bay that
-  // would run into the edge beam, rather than the bay being deleted: the rhythm
-  // still says 6 / 38 / 70, and the reason the third one cannot be built is in
-  // the source instead of in someone's memory. The edge beam is the one that
-  // stays because it is anchored - it centres on z = 76, where the side walls
-  // stop and the room opens.
+  // ⚠ THE TILE-PASSAGE RHYTHM IS DELETED. z = 6 / 38 / 70 was read off video
+  // frame sec_074 and is contradicted by Jake's own photographs of this ceiling,
+  // taken 17 Aug and now on the site:
+  //   · review-wine-1-today.jpg — straight on at the drop counter. ONE beam, and
+  //     the ceiling between it and the wall is unbroken cream. Beams at z = 6 and
+  //     z = 38 land squarely in that blank band; neither is there.
+  //   · review-wine-2-today.jpg — along the run from the hallway. Ceiling blank.
+  //   · review-wine-3-today.jpg — from the west end. Blank until the kitchen.
+  // Jake: "there's one wood beam in the entirety of the dining room slash wine
+  // closet area. I do not know why we have, like, two, almost three." His word
+  // and his photograph both outrank a frame reading, so this is deleted rather
+  // than tuned — three photographs agreeing is not something to split with.
+  //
+  // The north-edge beam SURVIVES: it is the only one consistent with "one beam",
+  // and it is the anchored one — centred on z = 76, where the side walls stop and
+  // the room opens. (It also absorbs the earlier repair here, which narrowed this
+  // edge from a doubled 16" band back to 10"; that whole rhythm is now gone.)
+  //
+  // ⚠ ITS POSITION IS STILL UNMEASURED. The photographs settle the COUNT, not the
+  // LOCATION — in wine-1 the real beam sits high in the frame, nearer the camera
+  // than anything modelled here. ONE tape, run wall to the beam's near face, is
+  // the last thing C-47 waits on. Do not nudge this z to match a photo by eye.
   const EZ0=71, EZ1=81;
-  bm(-6.1,188.4,EZ0,EZ1,106,117.6);                           // across the open north edge
-  for(const z of [6,38,70]) if(z+5<=EZ0)
-    bm(-6.1,188.4,z-5,z+5,106,117.6);                         // tile passage, sec_074
+  bm(-6.1,188.4,EZ0,EZ1,106,117.6);           // the one dining/wine-area beam
   // (z = -14 deleted - it intersected the cabinet crown over 170 inches)
 })();
 
