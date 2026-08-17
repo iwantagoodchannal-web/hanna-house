@@ -26,8 +26,12 @@ body.shot *,body.shot *::before,body.shot *::after{
   transition:none !important; animation:none !important}
 
 /* ---------- loading veil ---------- */
+/* z-index 46 — ABOVE the stage (0) and the scroll pages (10), BELOW the nav (50).
+   At 60 the veil covered the tab bar, so the Review tab could not be tapped
+   until the 3D model reported ready (or the 12s failsafe fired). Jake's dad
+   opens this on a phone to leave feedback; he must never wait on the model. */
 #veil{
-  position:fixed; inset:0; z-index:60; background:var(--ivory);
+  position:fixed; inset:0; z-index:46; background:var(--ivory);
   display:grid; place-content:center; gap:30px; justify-items:center;
   transition:opacity .9s var(--ease), visibility .9s;
 }

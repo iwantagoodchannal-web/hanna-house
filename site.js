@@ -26,6 +26,8 @@ const veil = document.getElementById('veil');
 const veilFill = document.querySelector('.veil-fill');
 setTimeout(()=>{ veilFill.style.height='72%'; }, 120);
 const veilDone = ()=>{
+  if(veil.classList.contains('gone') || veil.dataset.lifting) return;
+  veil.dataset.lifting = '1';
   veilFill.style.height='100%';
   document.body.classList.add('model-up');
   setTimeout(()=>veil.classList.add('gone'), 420);
@@ -371,6 +373,9 @@ function setPage(name){
     tb.classList.toggle('on', on); tb.setAttribute('aria-selected', on);
   });
   document.body.classList.toggle('on-still', name!=='wine-wall');
+  /* Review / Kitchen / Bathroom never show the model — drop the veil at once
+     instead of holding the page hostage to a load he has no use for. */
+  if(name!=='wine-wall') veilDone();
   history.replaceState(null,'','#'+name);
   scrollTo(0, savedScroll[name]||0);
   if(name==='wine-wall'){ measure(); lastProg=-1; }
