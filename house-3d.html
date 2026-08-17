@@ -1582,8 +1582,31 @@ G.ceil.visible=false;
   const bm=(x0,x1,z0,z1,y0,y1)=>{const m=pbox(x0,x1,z0,z1,y0,y1,MAT.beam,G.walls);
     m.userData={y0,y1};};
   for(let z=-92;z<70;z+=34) bm(192,445,z,z+6,140,KV);       // kitchen vault beams
-  bm(168,176,-19,76.4,H-14,H);                                // head of the kitchen passage
-  bm(-6.1,0,-19,75.7,H-16,H);                                 // head of the dining opening
+  // ⚠ THE TWO OPENING HEADS ARE DELETED. They were an 8" x 95.4" x 14" slab at
+  // the kitchen transition (x 168..176) and a 6.1" x 94.7" x 16" slab at the
+  // hallway transition (x -6.1..0), both MAT.beam, both at the ceiling, both
+  // running the full depth of their opening. Jake: "there's still a giant random
+  // wood slab that runs on the entrance and exits to the hallway and kitchen"
+  // — "on the roof". Two objects, exactly those two places.
+  //
+  // His photographs show neither:
+  //   · review-wine-2-today.jpg  the hallway transition — unbroken cream ceiling
+  //     and cans. The only wood in frame is the pantry door casing, vertical.
+  //   · review-wine-3-today.jpg  the kitchen transition — the dining ceiling runs
+  //     flat into the corner with nothing capping it.
+  //
+  // ⚠ AND THE THING THAT ALMOST SAVED THEM, because C-24 says wrong is not the
+  // same as absent: wine-3 DOES show a dark timber beyond that corner, high over
+  // the blue gable, running at an angle. That is real — but it is INSIDE the
+  // kitchen, on the vault, and it is already modelled by the vault beams below
+  // (x 192..445). It is not a slab capping the transition plane, which is where
+  // these two sat. Deleting these removes nothing the photographs support.
+  //
+  // Provenance, and it is the same story a third time: the block comment above
+  // cites frames sec_051/059/145 and sec_018/043 for these. A frame reading lost
+  // to a photograph on the tile-passage rhythm and on the beam count today; it
+  // loses here too. Frames show that beams EXIST near an opening; they were not
+  // enough to place one in the opening's plane.
   // C-47 (Jake): the beams across the dining/coffee ceiling are THICK timber
   // blocks, not thin slabs — 10" wide × 12" deep until his photos give the
   // true profile
@@ -1869,6 +1892,12 @@ function setState(m){
   G.wineN.visible=proposed && nicheOn;
   G.wineM.visible=proposed && !nicheOn;
   G.exist.visible=(m!=='new');
+  // C-62: the kitchen had NO before/after mechanism at all — setState touched
+  // G.cab/G.door/G.wineN/G.wineM/G.exist and never G.kit, so every C-51 change
+  // had nowhere to render. Kitchen made kitOld/kitNew CHILDREN of G.kit, so
+  // buildSolids()'s fixed [.. G.kit ..] traverse still reaches them.
+  G.kitOld&&(G.kitOld.visible=(m!=='new'));   // kitchen BEFORE-only
+  G.kitNew&&(G.kitNew.visible=proposed);      // kitchen AFTER-only
   document.querySelectorAll('.stb').forEach(x=>x.classList.toggle('on',x.dataset.s===m));
   document.getElementById('bDoor').classList.toggle('on',G.door.visible);
   shDirty();
