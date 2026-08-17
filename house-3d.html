@@ -1579,9 +1579,30 @@ G.ceil.visible=false;
    (sec_051, 059, 145 at the kitchen opening; sec_018, 043 at the dining opening;
    sec_074, 081 over the tile passage) and hiding them with the ceiling was wrong. */
 (function(){
-  const bm=(x0,x1,z0,z1,y0,y1)=>{const m=pbox(x0,x1,z0,z1,y0,y1,MAT.beam,G.walls);
+  const bm=(x0,x1,z0,z1,y0,y1,mat)=>{const m=pbox(x0,x1,z0,z1,y0,y1,mat||MAT.beam,G.walls);
     m.userData={y0,y1};};
-  for(let z=-92;z<70;z+=34) bm(192,445,z,z+6,140,KV);       // kitchen vault beams
+  // ⚠ THE KITCHEN VAULT RAFTERS ARE STAINED ALDER, NOT THE NEAR-BLACK TIMBER.
+  // Jake: "the support beams that are on the ceiling in the kitchen are
+  // see-through and not just physical blocks — you should make them."
+  // They are not transparent: raycasting the gaps between them returns the vault
+  // ceiling at y=150 every time, so the ceiling is solid and present. They read
+  // as slots because they were rendering nearly black. Measured off his own
+  // review-kitchen-1-today.jpg against the same view of the model:
+  //
+  //                         rafter          ceiling        ceiling / rafter
+  //     his photo        rgb( 91, 62, 58)  rgb(191,174,166)      2.6x
+  //     the model        rgb( 52, 45, 39)  rgb(197,188,170)      4.1x
+  //
+  // Twice the contrast it should have, and desaturated with it — his rafter is
+  // warm brown (R:G = 1.47), ours was nearly neutral (1.16). In the photo the
+  // rafters are plainly the SAME stained knotty alder as the cabinets beneath
+  // them (rgb(111,78,49) in the same frame), which is MAT.counter.
+  //
+  // C-25 says "near-black beams" and that is still true of the DINING beam —
+  // review-wine-1 shows it dark. One material was serving two different real
+  // woods. C-25 was sampled off video frames; this is a photograph, and that
+  // ordering has now settled four disagreements in one day.
+  for(let z=-92;z<70;z+=34) bm(192,445,z,z+6,140,KV,MAT.counter);   // kitchen vault rafters
   // ⚠ THE TWO OPENING HEADS ARE DELETED. They were an 8" x 95.4" x 14" slab at
   // the kitchen transition (x 168..176) and a 6.1" x 94.7" x 16" slab at the
   // hallway transition (x -6.1..0), both MAT.beam, both at the ceiling, both
