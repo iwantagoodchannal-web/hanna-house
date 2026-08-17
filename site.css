@@ -722,10 +722,28 @@ body.typing #review-summary{opacity:.14; pointer-events:none}
    ============================================================ */
 :root{--wine-acc:#713031}   /* bordeaux, in-family with the alder */
 
+/* Jake, on the live site: pictures "all to the right even though completely
+   centered." Both halves were true. The cards were shrink-wrapped to their
+   buttons (~420px on desktop — auto margins defeat grid stretch, the same
+   trap .details documents, and the v2 stage's children are all absolute so
+   nothing stretches the card) and then auto-centred in the column, 280px
+   right of the left-aligned text. Fix: everything hangs on the column's
+   LEFT line — intro, name, tabs, photos — and the photo is sized to the
+   viewport. The width formula keeps the 3:4 stage on screen; the ratio must
+   always equal the photo's so circle coordinates map exactly (object-fit
+   must never crop). */
+.area-tabs, .review-card{
+  width:min(100%, calc((100vh - 240px) * .75), 940px);
+  margin-left:0; margin-right:0;
+}
+
 /* --- the two clickers at the top --- */
+/* the tabs live OUTSIDE the 980px gallery column, so they need the column's
+   left offset by hand: (page width − 980)/2, floored at the page edge */
 .area-tabs{
-  display:flex; gap:10px; max-width:980px;
-  margin:0 auto clamp(24px,4vh,40px);
+  display:flex; gap:10px;
+  margin-left:max(0px, calc((100% - 980px)/2));
+  margin-bottom:clamp(24px,4vh,40px);
 }
 .area-tab{
   flex:1 1 0; padding:15px 18px; border-radius:999px; text-align:center;
