@@ -242,6 +242,18 @@ const PLAN = {
   // The extension is what hosts C-50's slider: 70.5" of wall (with w_pe) takes
   // a 33" leaf + ~35" park. Pocket vs barn-track and exact position: design,
   // delegated (Kitchen+Walls), video may inform. See C-74 addendum.
+  // C-72: THE PANTRY RETRACT (proposal-state). The east wall's kitchen face
+  // pulls WEST, flattening the chamfer ("closet retracts ~18 — needs to flatten
+  // because of the angle" — Jake; "same depth as the refrigerator" — his dad).
+  // RETRACT derives: FRIDGE_D − PROUD. Jake's ~18 ⇒ PROUD≈7 (fridge stands
+  // proud); the dad's phrasing ⇒ PROUD=0, RETRACT=25. One constant moves when
+  // the tape-line answer lands. ⚠ doorHost OPEN (C-72 add.3): fridge 48 +
+  // doorway 27.5 = 5" over the 70.5" retracted face — where the proposed
+  // doorway lives in this corner awaits Jake's tape-line/retract confirms.
+  kitRetract:(function(){ const FRIDGE_D=25, PROUD=7;
+    const dist=FRIDGE_D-PROUD;
+    return {dist:dist, face:192.3-dist, fridgeD:FRIDGE_D, proud:PROUD,
+            doorHost:'open'}; })(),
   wall45sq:{band:{x0:152.3, x1:186.2, z0:-25, z1:-19},
             peExt:{x0:186.2, x1:192.3, z0:-52.9, z1:-25},
             // C-75 (by delegation): concealed top-hung track, opening HARD
@@ -1514,7 +1526,13 @@ PLAN.walls.forEach(buildWall);
   // Patch sent to Hub separately - 08 must not reach into an orphan file.
   G.kitOld=new THREE.Group(); G.kitOld.visible=true;   // BEFORE-only
   G.kitNew=new THREE.Group(); G.kitNew.visible=false;  // AFTER-only
-  G.kit.add(G.kitOld); G.kit.add(G.kitNew);
+  // C-73's raise is a third, INDEPENDENT handle - not part of before/after.
+  // Core's contract (20b31c3): G.kitRaise, child of G.kit, visible:false at
+  // build, toggled by {t:'kitRaise',on}. Independent because Jake asked to SEE
+  // the height change on its own; folding it into kitNew would make it
+  // inseparable from the rest of the proposal.
+  G.kitRaise=new THREE.Group(); G.kitRaise.visible=false;
+  G.kit.add(G.kitOld); G.kit.add(G.kitNew); G.kit.add(G.kitRaise);
 
   for(const k of PLAN.kitchen){
     // the fridge is BEFORE-only: C-51 relocates it to the north wall, and
@@ -1532,22 +1550,25 @@ PLAN.walls.forEach(buildWall);
   // every frame of the walkthrough shows raised-panel knotty alder doors
   // Drawer-over-doors with oil-rubbed-bronze hardware. Every frame shows ORB bar
   // pulls and knobs; the model had none outside the wine cabinet's sliding door.
-  const panelsX=(x0,x1,y0,y1,zf,w)=>{
+  // gp: optional target group, defaulting to G.kit - same shape as panelsZ, so
+  // every existing call is unchanged and C-73's raise can pass G.kitRaise.
+  const panelsX=(x0,x1,y0,y1,zf,w,gp)=>{
+    const g=gp||G.kit;
     const n=Math.max(1,Math.round((x1-x0)/24)), bw=(x1-x0)/n, base=(y1-y0)>26;
     for(let i=0;i<n;i++){
       const a=x0+i*bw+1.4, b=x0+(i+1)*bw-1.4, cxb=(a+b)/2;
       if(base){
-        pbox(a,b,zf,zf+0.5,y1-8.4,y1-1.4,MAT.panel,G.kit);
-        pbox(a,cxb-0.5,zf,zf+0.5,y0+1.4,y1-9.6,MAT.panel,G.kit);
-        pbox(cxb+0.5,b,zf,zf+0.5,y0+1.4,y1-9.6,MAT.panel,G.kit);
-        pbox(cxb-4,cxb+4,zf+0.4,zf+0.9,y1-5.4,y1-4.4,MAT.orb,G.kit);
+        pbox(a,b,zf,zf+0.5,y1-8.4,y1-1.4,MAT.panel,g);
+        pbox(a,cxb-0.5,zf,zf+0.5,y0+1.4,y1-9.6,MAT.panel,g);
+        pbox(cxb+0.5,b,zf,zf+0.5,y0+1.4,y1-9.6,MAT.panel,g);
+        pbox(cxb-4,cxb+4,zf+0.4,zf+0.9,y1-5.4,y1-4.4,MAT.orb,g);
         for(const kx of [cxb-3,cxb+3])
-          pbox(kx-0.6,kx+0.6,zf+0.4,zf+1.1,y1-13,y1-11.6,MAT.orb,G.kit);
+          pbox(kx-0.6,kx+0.6,zf+0.4,zf+1.1,y1-13,y1-11.6,MAT.orb,g);
       }else{
-        pbox(a,b,zf,zf+0.5,y0+1.4,y1-1.4,MAT.panel,G.kit);
-        pbox(cxb-4,cxb+4,zf+0.4,zf+0.9,y0+1.6,y0+2.6,MAT.orb,G.kit);
+        pbox(a,b,zf,zf+0.5,y0+1.4,y1-1.4,MAT.panel,g);
+        pbox(cxb-4,cxb+4,zf+0.4,zf+0.9,y0+1.6,y0+2.6,MAT.orb,g);
       }
-      if(i) pbox(x0+i*bw-0.4,x0+i*bw+0.4,zf,zf+0.6,y0,y1,w||MAT.counter,G.kit);
+      if(i) pbox(x0+i*bw-0.4,x0+i*bw+0.4,zf,zf+0.6,y0,y1,w||MAT.counter,g);
     }
   };
   // gp: optional target group. Defaults to G.kit so every existing call is
@@ -1597,6 +1618,27 @@ PLAN.walls.forEach(buildWall);
     pbox(u[0],u[1],-95.5,-83.5,86.6,100,MAT.alder,G.kit);
     pbox(u[0]-1.4,u[1]+1.4,-95.5,-81.6,100,103.5,MAT.alder,G.kit);
     panelsX(u[0],u[1],56,84,-83.5); panelsX(u[0],u[1],88,98,-83.5);
+    // C-73: "are you thinking to increase the height of these to that roofline?
+    // - that's one of the things I want to SEE." A VISUALISATION REQUEST, not a
+    // decision, so it is an OPTION on its own handle rather than part of the
+    // proposal: G.kitRaise, child of G.kit so buildSolids' fixed traverse still
+    // reaches it, visible:false at build, flipped by {t:'kitRaise',on} which
+    // Core landed in 20b31c3. Its own toggle is the point - Jake asked to see
+    // the height change by itself, which folding it into kitNew would prevent.
+    // Carries the existing crown UP to KSOF rather than adding a second crown.
+    // ⚠ GATED TOO, and NOT for a rendering reason. visible:false hides these
+    // from the CAMERA but not from the BAKE: Core confirms mark() never reads
+    // .visible, so hidden meshes still mark occupancy. These sit at y 103.5..
+    // KSOF directly above the uppers - exactly the recessed soffit band - so
+    // the bake filled that band with a flat lit panel. Invisible geometry,
+    // visible artifact. Core's state-aware occupancy fix removes the cause;
+    // until it lands, not building them is the only way to keep the band clean.
+    // Take this gate off the moment that fix ships - the raise itself is fine.
+    if(PLAN.kitRetract&&PLAN.kitRetract.massing){
+      pbox(u[0],u[1],-95.5,-83.5,103.5,KSOF-3.5,MAT.alder,G.kitRaise);
+      pbox(u[0]-1.4,u[1]+1.4,-95.5,-81.6,KSOF-3.5,KSOF,MAT.alder,G.kitRaise);
+      panelsX(u[0],u[1],105.5,KSOF-5.5,-83.5,null,G.kitRaise);
+    }
   }
   // C-44: the range-leg uppers + crown also stopped at z=12, clipping through
   // the 84"-tall fridge's front face — everything now ends at the fridge (z=2)
@@ -1626,6 +1668,67 @@ PLAN.walls.forEach(buildWall);
   pbox(422,447,2,50,0,36,MAT.counter,G.kitNew);       // counter body
   pbox(421,447,2,50,36,37.5,MAT.stone,G.kitNew);      // granite, west overhang
   panelsZ(2,50,4,34,422,null,G.kitNew);               // door panels, west face
+
+  // ===== C-72: the relocated fridge assembly at the flattened corner ========
+  // Inert until PLAN.kitRetract exists, and self-gating on the room it needs.
+  // Order per C-72: fridge -> clad stub -> tall open cabinet -> pantry doorway.
+  //
+  // ⚠ THE CORNER IS DOUBLE-CLAIMED and the stub is what resolves it. Two runs
+  // meet at (face, -95.5): the tall cabinet heading EAST along the north wall
+  // and the fridge heading SOUTH along the retracted wall. Both want the same
+  // corner square. C-71's "a piece of trim or some kind of cladding to make it
+  // look seamless" is exactly a corner filler, so the STUB TAKES THE CORNER and
+  // the other two start after it. Drawing this in plan is the only way it shows
+  // - adding widths along a line hides it, which is how three of us missed it.
+  //
+  // TWO PROPORTIONS ARE MINE BY DELEGATION AND I AM STATING THEM, NOT HIDING THEM:
+  //  · CABD 18" - an OPEN ladder cabinet, not a counter-depth box. It is also
+  //    what makes the fridge fit at ANY retract: the overrun moves with cabinet
+  //    depth, not with the retract distance.
+  //  · the cabinet is SKINNY - derived width, ~14" once M-19 moves k_cn. C-51
+  //    records Jake's own words as "a skinny cabnet on the left", so skinny is
+  //    plausibly the intent rather than a compromise.
+  //
+  // ⚠ NOT BUILT: the pantry doorway. doorHost is 'open' in PLAN - at every
+  // combination the fridge and stub consume the retracted wall, so the doorway
+  // is NOT on this wall. Absent-pending-host, deliberately, the same way Site
+  // ships a dark station rather than a guessed one.
+  (function(){
+    // ⚠ GATE: PLAN.kitRetract.massing — NOT kitRetract's mere existence.
+    // kitRetract has existed since aa26247, so gating on the object would have
+    // ACTIVATED this the moment it was committed: whose commit activates is not
+    // the same question as whose file changed. `massing` is absent today, so
+    // this is genuinely dormant code and safe to carry through anyone's window.
+    // Hub flips it to true when the massing gets its own verify cycle - which
+    // puts activation in the owner's hands instead of making it a side effect
+    // of a kitchen commit.
+    const R=PLAN.kitRetract; if(!R||!R.massing) return;
+    const CN=PLAN.kitchen.find(k=>k.id==='k_cn'); if(!CN) return;
+    const F=R.face, FD=R.fridgeD, NW=-95.5, CABD=18, FW=48, FH=84;
+    const front=F+FD;                                   // fridge/stub front plane
+    const stubZ=NW+CABD, frZ=stubZ+FW;                  // stub then fridge, southward
+    // clad stub - the corner, full height to the soffit datum
+    pbox(F,front,NW,stubZ,0,KSOF,MAT.counter,G.kitNew);
+    pbox(front-0.5,front,NW,stubZ,0,KSOF,MAT.panel,G.kitNew);   // cladding face
+    // fridge: panel-front, and the cabinet above it carries on to KSOF
+    pbox(F,front,stubZ,frZ,0,FH,MAT.counter,G.kitNew);
+    pbox(front-0.6,front,stubZ,frZ,1,FH-1,MAT.panel,G.kitNew);  // panel front
+    for(const hz of [stubZ+FW*0.5-1.2,stubZ+FW*0.5+1.2])        // two tall pulls
+      pbox(front,front+0.7,hz-0.5,hz+0.5,FH*0.45,FH*0.8,MAT.orb,G.kitNew);
+    pbox(F,front,stubZ,frZ,FH,KSOF,MAT.counter,G.kitNew);       // over-fridge, to KSOF
+    panelsZ(stubZ,frZ,FH+1.5,KSOF-1.5,front,null,G.kitNew);
+    // tall open ladder cabinet, NORTH wall, east of the stub. Width is derived,
+    // so it appears on its own when M-19 pushes k_cn east - today it is ~0.
+    const cw=CN.x0-front-1;
+    if(cw>=9){
+      pbox(front,front+cw,NW,NW+CABD,0,KSOF,MAT.counter,G.kitNew);
+      const bays=Math.max(3,Math.round((KSOF-4)/16));
+      for(let i=1;i<bays;i++){                          // open shelves, no doors
+        const sy=4+i*((KSOF-8)/bays);
+        pbox(front+1,front+cw-1,NW+1,NW+CABD-1.2,sy,sy+0.9,MAT.rack,G.kitNew);
+      }
+    }
+  })();
   // battens sat 0.4" inside the upper boxes with their bottoms exactly on the
   // cabinet bottom at y=54 - three coplanar downward faces, visible from below.
   // Bottom nudged to 54.25 (C-49's beam-top precedent) rather than moving them
@@ -2166,40 +2269,35 @@ G.flags.visible=false;
 })();
 
 /* ===== recessed cans. Visible in sec_050, 058, 088, 089, 101, 048 and they are
-   what makes an interior read as lit rather than flat. ===== */
-(function(){
-  const trim=M(0xe8e2d6,0.7), lit=new THREE.MeshBasicMaterial({color:0xfff2d8});
-  // Every can keeps its FIXTURE (trim ring + lit disc), but only ~1 in 3 carries
-  // a real PointLight. 31 point lights made the forward renderer evaluate 30+
-  // lights per fragment — the frame-rate complaint traced straight to this.
-  // The lit discs + baked AO carry the look; the remaining lights are stronger.
+   what makes an interior read as lit rather than flat. =====
+
+   CANS IS DATA; THE GEOMETRY BELOW IS DRAWN FROM IT. Two steps, one source, so
+   the fixtures and the list cannot drift — C-53's lesson applied before it costs
+   anything. Core's light bake (12-engine) reads this at build time.
+
+     [ x, z, y, lit ]
+       y    the TRIM RING's height. The lit disc sits 0.65" below it and any
+            runtime PointLight 5.2" below; both derive from y, so a ceiling that
+            moves takes the whole fixture with it.
+       lit  1 for the ~1-in-3 cans that ALSO carry a runtime PointLight today.
+            ⚠ EVERY entry is a real fixture in the house. `lit` is a rendering
+            compromise (31 point lights made the forward renderer evaluate 30+
+            per fragment), NOT a fact about the room — a bake should treat all of
+            them as lit and use this flag only to find the ones that would then
+            be double-counted.
+     y is resolved per zone here (dining/hallway at H, kitchen vault at KV), so a
+     consumer needs no room knowledge. ⚠ The vault's KV=150 is ~2" above the
+     newest cloud read (M-16, unregistered) — live uncertainty, not an error. */
+const CANS=(function(){
   const CANR=3.4;                                     // trim-ring radius
-  const can=(x,z,ch,glow)=>{
-    const CH=ch||H;                                   // ceiling height at this can
-    const t=new THREE.Mesh(new THREE.CylinderGeometry(CANR,CANR,1.2,18),trim);
-    t.position.set(x,CH-0.8,z); G.ceil.add(t);
-    const l=new THREE.Mesh(new THREE.CylinderGeometry(2.6,2.6,0.25,18),lit);
-    l.position.set(x,CH-1.45,z); G.ceil.add(l);
-    if(glow){ const p=new THREE.PointLight(0xffe0b0,0.45,230,2);
-      p.position.set(x,CH-6,z); scene.add(p); }
-  };
-  can(26,26,0,1);  can(84,26,0,1);  can(142,26,0,1);   // over the run — always lit
-  can(26,86);      can(84,86,0,1);  can(142,86);
-  can(40,150,0,1); can(110,150);    can(40,204);       can(110,204,0,1);
-  can(-70,-60);    can(-70,10);     can(-70,80);       // hallway
-  can(-24,-60,0,1);can(-24,10);     can(-24,80);
-  // A can cannot be inside a wall. Of this 5x3 kitchen grid exactly one lands in
-  // the C-24 chamfer: (406,-80) sits 1.77" from the chamfer's centre plane, so a
-  // 3.4" trim ring in a 6" wall renders as a disc half-swallowed by it — the
-  // C-29/C-55 class again, arriving from a different direction. All 15 were
-  // checked; the next nearest is 50.5" clear.
-  // Skipped by TESTING the fixture against PLAN.wall45, not by deleting the
-  // coordinate: the grid still says what it wants, and a chamfer that moves
-  // re-evaluates this instead of stranding a hand-removed hole in the pattern.
-  // This removes no light — only 3 of the 15 cans carry a PointLight and this is
-  // not one of them, so what goes is a trim ring and a lit disc that were already
-  // invisible. Whether a fixture SHOULD light that corner is Jake's call, and
-  // nothing here forecloses it.
+  // A can cannot be inside a wall. Of the 5x3 kitchen grid exactly one lands in
+  // the C-24 chamfer: (406,-80) sits 1.77" from its centre plane, so a 3.4" trim
+  // ring in a 6" wall renders as a disc half-swallowed by it — the C-29/C-55
+  // class arriving from a different direction. All 15 were checked; the next
+  // nearest is 50.5" clear. Skipped by TESTING against PLAN.wall45, not by
+  // deleting the coordinate, so a chamfer that moves re-evaluates it instead of
+  // stranding a hand-cut hole in the pattern. It is excluded from the DATA, which
+  // is right: there is no fixture there for a bake to light either.
   const w45=PLAN.wall45, L45=Math.hypot(w45.bx-w45.ax,w45.bz-w45.az),
         ux=(w45.bx-w45.ax)/L45, uz=(w45.bz-w45.az)/L45;
   const inChamfer=(x,z)=>{
@@ -2207,9 +2305,28 @@ G.flags.visible=false;
     return Math.abs(px*uz-pz*ux) <= w45.t/2+CANR      // perpendicular into the slab
         && along >= -CANR && along <= L45+CANR;       // and within the wall's run
   };
+  const L=[], add=(x,z,ch,glow)=>{
+    if(!inChamfer(x,z)) L.push([x, z, (ch||H)-0.8, glow?1:0]); };
+  add(26,26,0,1);  add(84,26,0,1);  add(142,26,0,1);  // over the run — always lit
+  add(26,86);      add(84,86,0,1);  add(142,86);
+  add(40,150,0,1); add(110,150);    add(40,204);      add(110,204,0,1);
+  add(-70,-60);    add(-70,10);     add(-70,80);      // hallway
+  add(-24,-60,0,1);add(-24,10);     add(-24,80);
   for(const x of [214,262,310,358,406]) for(const z of [-80,-30,20])
-    if(!inChamfer(x,z))
-      can(x,z,KV, (x===262&&z===-30)||(x===358&&z===-30)||(x===310&&z===20));
+    add(x,z,KV, (x===262&&z===-30)||(x===358&&z===-30)||(x===310&&z===20));
+  return L;
+})();
+(function(){
+  const trim=M(0xe8e2d6,0.7), lit=new THREE.MeshBasicMaterial({color:0xfff2d8});
+  const CANR=3.4;
+  for(const [x,z,y,glow] of CANS){
+    const t=new THREE.Mesh(new THREE.CylinderGeometry(CANR,CANR,1.2,18),trim);
+    t.position.set(x,y,z); G.ceil.add(t);
+    const l=new THREE.Mesh(new THREE.CylinderGeometry(2.6,2.6,0.25,18),lit);
+    l.position.set(x,y-0.65,z); G.ceil.add(l);
+    if(glow){ const p=new THREE.PointLight(0xffe0b0,0.45,230,2);
+      p.position.set(x,y-5.2,z); scene.add(p); }
+  }
 })();
 
 /* ===== the red entry accent wall + apothecary chest terminate every westward
@@ -2787,8 +2904,13 @@ addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updat
         return dx*dx+dy*dy+dz*dz<LB_R2;
       });
       // subdividing costs vertices (each pays full AO too); spend them only
-      // where a pool can land — never on ceilings (cans face away from them)
-      if(nearCans.length && o.parent!==G.ceil &&
+      // where a pool can land — never on ceilings (cans face away from them),
+      // and NOTHING that lives wholly above 100": pools are a floor/counter/
+      // lower-wall phenomenon, and dense vertices up against the 4" AO voxel
+      // grid ALIAS — on the sloped vault planes that rendered as black
+      // scribbles along the rafters (Walls' 15x finding; confirmed by A/B:
+      // subdiv on = streaks, off = clean, light values innocent either way)
+      if(nearCans.length && o.parent!==G.ceil && bb.min.y<100 &&
          Math.max(bb.max.x-bb.min.x,bb.max.y-bb.min.y,bb.max.z-bb.min.z)>24)
         o.geometry=subdivLarge(o.geometry,22);
     }
@@ -2825,14 +2947,34 @@ addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updat
           const d=Math.sqrt(d2)||1;
           const ndl=(vn.x*dx+vn.y*dy+vn.z*dz)/d;
           if(ndl<=0) continue;
-          let vis=1;                          // march the AO voxel grid to the can;
-          if(d>26)                            // nearer than that cannot be occluded
-            for(let t=8;t<d-11;t+=8)          // stop short so the ceiling slab
-              if(solid(vp.x+dx/d*t+vn.x*1.2,  // holding the can does not self-shadow
-                       vp.y+dy/d*t+vn.y*1.2,
-                       vp.z+dz/d*t+vn.z*1.2)){ vis=0; break; }
-          if(!vis) continue;
-          const E=LB_I*ndl/(1+d2/3600);       // soft inverse-square, ~60" half-throw
+          /* A recessed can is a DOWNWARD CONE, not a bulb. The first live test
+             (Walls, 17 Aug) put grazing light on the vault ceiling, whose
+             occlusion rays hug the ceiling plane straight through the rafter
+             voxels — half the vertices marked shadowed, smeared across big
+             ceiling triangles as black streaks along the member (911 vs 59
+             dark pixels, 15x). Ceilings/rafter-tops now take only a small
+             UNMARCHED scatter term (trim bloom + bounce stand-in — no ray, so
+             no ray artefact); the marched throw applies inside the cone. */
+          const down=dy/d, E0=LB_I*ndl/(1+d2/3600);
+          let E;
+          if(down>0.05){
+            E=E0*Math.pow(down,1.5);          // cosine-lobe downlight
+            /* march only when the contribution is VISIBLE. A grazing ray's
+               energy is tiny but its occlusion flips 0/1 between neighbouring
+               vertices — on the sloped vault planes that variance rendered as
+               black streaks along the rafters (second finding, same defect
+               family: low signal + binary shadow = loud noise). Below the
+               gate the light rides unshadowed; above it, true shadows. */
+            if(E>0.025){
+              let vis=1;                      // march the AO voxel grid to the can;
+              if(d>26)                        // nearer than that cannot be occluded
+                for(let t=8;t<d-11;t+=8)      // stop short so the ceiling slab
+                  if(solid(vp.x+dx/d*t+vn.x*1.2,// holding the can does not self-shadow
+                           vp.y+dy/d*t+vn.y*1.2,
+                           vp.z+dz/d*t+vn.z*1.2)){ vis=0; break; }
+              if(!vis) continue;
+            }
+          }else E=E0*0.10;                    // grazing/up: bloom only, no march
           lr+=E; lg+=E*0.80; lb+=E*0.58;      // ~2700K tungsten warm
         }
       }
@@ -3053,4 +3195,4 @@ tick();
 </script>
 </body>
 </html>
-<!-- build:109d8e0 -->
+<!-- build:d9719b9 -->
