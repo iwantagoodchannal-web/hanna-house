@@ -41,6 +41,7 @@ addEventListener('message', ev => {
     modelReady = true;
     buildSegments();
     syncModel();
+    if(page === 'kitchen') stationSync();
     requestAnimationFrame(()=>requestAnimationFrame(veilDone));
   }
   if(d.t === 'walk' && !d.on) exitExplore();
@@ -189,7 +190,9 @@ function sendPose(pose){               // skip identical repeats (static poses)
 }
 function drive(t){
   requestAnimationFrame(drive);
-  if(document.body.classList.contains('on-still')) return;
+  /* the scroll rig owns the camera ONLY on the wine-wall page — the kitchen
+     page shows the live model too, but its stations drive the camera */
+  if(page !== 'wine-wall') return;
   const y = scrollY, vh = innerHeight;
   const mv = y > vh*0.25;                 // fade the scroll cue once moving
   if(mv !== movedCls){ movedCls = mv; document.body.classList.toggle('moved', mv); }
@@ -374,10 +377,14 @@ function setPage(name){
     const on = tb.dataset.page===name;
     tb.classList.toggle('on', on); tb.setAttribute('aria-selected', on);
   });
-  document.body.classList.toggle('on-still', name!=='wine-wall');
-  /* Review / Kitchen / Bathroom never show the model — drop the veil at once
-     instead of holding the page hostage to a load he has no use for. */
+  /* the kitchen page shows the LIVE MODEL now (stations) — only the true
+     still pages hide the stage */
+  document.body.classList.toggle('on-still',
+    name==='bathroom' || name==='review' || name==='decide');
+  document.body.classList.toggle('on-kitchen', name==='kitchen');
+  /* still pages never wait on the model — drop the veil at once */
   if(name!=='wine-wall') veilDone();
+  kitchenPage(name==='kitchen');
   history.replaceState(null,'','#'+name);
   scrollTo(0, savedScroll[name]||0);
   if(name==='wine-wall'){ measure(); lastProg=-1; }
@@ -396,6 +403,137 @@ document.querySelector('.tabs').addEventListener('keydown', e=>{
   if(j===null) return;
   e.preventDefault(); tabs[j].focus(); setPage(tabs[j].dataset.page);
 });
+
+/* ---------- kitchen stations ----------
+   The kitchen's changes are simultaneous, not narrative — so a MAP, not a
+   scroll: the live model held at legible cameras, a chip row of changes.
+   ready:false = the change isn't built yet; the station still shows TODAY'S
+   condition at that spot with what's-coming copy (honest, never a guess).
+   Compare = press-and-hold anywhere → existing; the ONE shared gesture.
+   NOTE (Kitchen lane, verified): in 'proposed' no fridge exists anywhere yet
+   (C-51's new one is unbuilt) — the overview copy names that absence. */
+const K_STATIONS = [
+  {id:'overview', label:'Overview', ready:true,
+   pose:{t:'pose', x:352, z:74, eye:65, yaw:.84, pitch:-.04, fov:70},
+   eyebrow:'The kitchen', h2:'One room,<br>four changes.',
+   body:'New cabinet faces, a flattened corner, a pocket door, uppers to the '+
+        'soffit — and the fridge crossing the room. Hold the picture to '+
+        'see today’s kitchen. One honest gap: the fridge is mid-move, so '+
+        'right now it lives nowhere — its new corner build lands next.'},
+  {id:'corner', label:'The corner', ready:true,
+   pose:{t:'pose', x:302, z:-22, eye:61, yaw:.96, pitch:.03, fov:60},
+   eyebrow:'The pantry corner', h2:'The corner opens.',
+   body:'The angled corner flattens to a fridge-deep recess — the '+
+        'fridge’s new home, with a tall open cabinet beside the pantry '+
+        'door. The clearing is real today; hold to see the corner as it '+
+        'stands. The new build follows the survey.'},
+  {id:'doors', label:'The doors', ready:false,
+   /* TODO: re-pick when the pocket door exists and is visible */
+   pose:{t:'pose', x:290, z:-15, eye:60, yaw:1.05, pitch:.02, fov:66},
+   eyebrow:'The pantry door', h2:'Swing out,<br>pocket in.',
+   body:'Decided: a 30-inch pocket door replaces the swing — it stays '+
+        'where his palms framed it and slides south into the new wall. '+
+        'Being built now; this is the doorway it replaces.'},
+  {id:'height', label:'The height', ready:false,
+   pose:{t:'pose', x:280, z:0, eye:62, yaw:.85, pitch:.12, fov:58},
+   eyebrow:'The uppers', h2:'Up to the soffit.',
+   body:'The cabinets rise to the pantry soffit line. Jake wants to SEE '+
+        'this one — when it’s built, a switch appears right here '+
+        'to flip the raise on and off.'},
+  {id:'look', label:'The look', ready:true, refs:true,
+   pose:{t:'pose', x:358, z:64, eye:62, yaw:.82, pitch:-.02, fov:66},
+   eyebrow:'The look', h2:'Light shaker,<br>grey tile.',
+   body:'Confirmed — Jake picked the concept style: flat shaker faces, '+
+        'vertical stacked tile, black hardware. The model wears it next; '+
+        'these are the reference images it follows:'},
+];
+let curStation = 'overview';
+const kTabsEl = document.getElementById('station-tabs');
+function stationGo(id, snap){
+  const s = K_STATIONS.find(x=>x.id===id) || K_STATIONS[0];
+  curStation = s.id;
+  [...kTabsEl.children].forEach(b=>{
+    const on = b.dataset.st===s.id;
+    b.classList.toggle('on', on); b.setAttribute('aria-selected', on);
+  });
+  document.getElementById('k-eyebrow').textContent = s.eyebrow;
+  document.getElementById('k-h2').innerHTML = s.h2;
+  document.getElementById('k-body').textContent = s.body;
+  document.getElementById('k-building').hidden = !!s.ready;
+  document.getElementById('k-refs').hidden = !s.refs;
+  /* no per-switch opacity dance: a stalled transition (backgrounded tab)
+     would present as INVISIBLE COPY. The camera glide carries the change;
+     .in lands once at page-enter and stays. */
+  document.getElementById('k-copy').classList.add('in');
+  const p = Object.assign({}, s.pose, snap?{jump:true}:null);
+  if(innerHeight > innerWidth && p.fov) p.fov = Math.min(92, p.fov + 16);
+  if(modelReady) post(p);
+}
+function stationSync(){ stationGo(curStation, true); }
+function kitchenPage(on){
+  if(!kTabsEl) return;
+  if(on){
+    if(!kTabsEl.children.length)
+      K_STATIONS.forEach(s=>{
+        const b = document.createElement('button');
+        b.dataset.st = s.id; b.setAttribute('role','tab');
+        b.className = 'st-chip'+(s.ready?'':' building');
+        b.innerHTML = s.label + (s.ready?'':' <span class="st-tag">building</span>');
+        b.addEventListener('click', ()=>stationGo(s.id, false));
+        kTabsEl.appendChild(b);
+      });
+    if(modelReady) post({t:'state', v:'proposed'});
+    stationGo(curStation, true);
+  }else{
+    /* hand the camera back cleanly: wine-wall page re-syncs itself */
+    lastPose = ''; lastProg = -1;
+  }
+}
+/* hold-to-compare on the kitchen page — same gesture as the wine wall.
+   Deliberately parallel (not yet unified): Jake is holding a critique of
+   the compare pattern; when it lands, BOTH implementations get replaced by
+   one component in a single redesign. */
+(function(){
+  const chip = document.getElementById('compare-chip');
+  const dipEl = document.getElementById('dip');
+  let timer = null, held = false, x0 = 0, y0 = 0;
+  const soft = fn => { dipEl.classList.add('on');
+    setTimeout(()=>{ fn(); dipEl.classList.remove('on'); }, RM?0:140); };
+  document.getElementById('page-kitchen').addEventListener('pointerdown', e=>{
+    if(e.button !== 0 || e.target.closest('button, a, .station-tabs, .k-refs')) return;
+    x0 = e.clientX; y0 = e.clientY;
+    timer = setTimeout(()=>{ held = true;
+      soft(()=>post({t:'state', v:'existing'}));
+      chip.textContent = 'The kitchen today — release to return';
+      chip.classList.add('on');
+    }, 340);
+  });
+  addEventListener('pointermove', e=>{
+    if(timer && !held && Math.hypot(e.clientX-x0, e.clientY-y0) > 9){
+      clearTimeout(timer); timer = null; }
+  });
+  const release = ()=>{
+    clearTimeout(timer); timer = null;
+    if(!held) return;
+    held = false;
+    soft(()=>post({t:'state', v:'proposed'}));
+    chip.classList.remove('on');
+    chip.textContent = 'The house today — release to return';
+  };
+  addEventListener('pointerup', release);
+  addEventListener('pointercancel', release);
+})();
+/* reference lightbox (the look station) */
+(function(){
+  const lb = document.getElementById('k-lightbox');
+  if(!lb) return;
+  document.querySelectorAll('#k-refs img').forEach(im=>
+    im.addEventListener('click', ()=>{
+      lb.querySelector('img').src = im.dataset.full || im.src;
+      lb.hidden = false;
+    }));
+  lb.addEventListener('click', ()=>{ lb.hidden = true; });
+})();
 
 /* ---------- before / after slider ---------- */
 (function(){

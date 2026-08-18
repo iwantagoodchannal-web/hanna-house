@@ -177,15 +177,24 @@
 
 </main>
 
-<!-- ================= KITCHEN / BATHROOM — in design ================= -->
-<main id="page-kitchen" class="page still-page" hidden>
-  <div class="still kitchen-still" aria-hidden="true"></div>
-  <div class="still-copy">
-    <p class="eyebrow">Kitchen</p>
-    <h2>In design.</h2>
-    <p class="lede">The next chapter. Measurements underway.</p>
+<!-- ================= KITCHEN — the changes, stationed on the live model ================= -->
+<main id="page-kitchen" class="page kitchen-page" hidden>
+  <div class="k-copy" id="k-copy">
+    <p class="eyebrow" id="k-eyebrow"></p>
+    <h2 id="k-h2"></h2>
+    <p class="body" id="k-body"></p>
+    <p class="k-building" id="k-building" hidden>⏳ This change is being built —
+       you're looking at the kitchen as it stands.</p>
+    <div class="k-refs" id="k-refs" hidden>
+      <figure><img src="assets/review-kitchen-2-concept-2.jpg" alt="The new style with the tile medallion kept" loading="lazy"><figcaption>medallion kept</figcaption></figure>
+      <figure><img src="assets/rework-kitchen-new-c.jpg" alt="The new style with plain stacked tile" loading="lazy"><figcaption>plain tile</figcaption></figure>
+    </div>
   </div>
+  <nav class="station-tabs" id="station-tabs" role="tablist" aria-label="Kitchen changes"></nav>
+  <div id="k-lightbox" hidden><img src="" alt="Reference, enlarged"></div>
 </main>
+
+<!-- ================= BATHROOM — in design ================= -->
 
 <main id="page-bathroom" class="page still-page" hidden>
   <div class="still bath-still" aria-hidden="true"></div>
@@ -271,7 +280,7 @@
 
   <script id="decisions-data" type="application/json">
   {
-    "updated": "17 Aug — 3585 narrowed: subject identified from the photo, only the reading is still needed",
+    "updated": "17 Aug ~19:40 — cabinet-aesthetic ANSWERED and struck: LIGHT SHAKER, his concept images (DECISIONS row 19). range-cabinet-width added and paired with beam-position as ONE trip; Jake says later today (row 20). 16 cards: 6 decisions + 10 captions.",
     "groups": [
       {
         "title": "Decisions",
@@ -301,26 +310,14 @@
           {
             "id": "beam-position",
             "q": "From the run wall to the near face of the dining ceiling beam — how far?",
-            "why": "Your three photographs proved there is ONE beam, not three, and two were deleted on that evidence. But a photograph settles how many things there are, not where they are — in your photo the real beam sits nearer the camera than anything modelled, and nobody nudged it to match by eye. This is the oldest unresolved item in the Walls lane and it has now blocked twice. One tape.",
+            "why": "📏 ONE TRIP, TWO TAPES — do this one together with the cabinet-next-to-the-stove tape. Your three photographs proved there is ONE beam, not three, and two were deleted on that evidence. But a photograph settles how many things there are, not where they are — in your photo the real beam sits nearer the camera than anything modelled, and nobody nudged it to match by eye. This is the oldest unresolved item in the walls lane and it has now blocked three times.",
             "options": []
           },
           {
-            "id": "cabinet-aesthetic",
-            "q": "The new kitchen cabinets — light shaker like your concept images?",
-            "why": "In the video, when your dad says the fridge front should 'look like that', the camera is dwelling on the EXISTING alder bank. So 'that' could mean the concept style you generated, or match-the-existing-alder. Your standing word says the concept style — one line confirms it before materials get applied.",
-            "options": [
-              "Light shaker, like the concept images",
-              "Match the existing alder"
-            ]
-          },
-          {
-            "id": "thirty-leaf-or-opening",
-            "q": "Your tape note says '30 SLIDE' — is 30 the door panel itself, or the finished opening?",
-            "why": "One answer picks the door's position AND its mechanism; nothing else about it needs you. If 30 is the PANEL: the door stays exactly where your dad framed it with his palms in the video, slides south over the new wall, and becomes a pocket — the only kind that truly 'almost disappears into the wall', which is his phrase. If 30 is the OPENING: the doorway has to move to the corner end of the new wall, slides north, on a concealed surface track. They aren't interchangeable — a 33-inch opening physically cannot fit where he framed it; the park wall is 2.8 inches short. Kitchen's read, noted but not acted on: the panel reading fits the video better.",
-            "options": [
-              "30 is the door panel",
-              "30 is the finished opening"
-            ]
+            "id": "range-cabinet-width",
+            "q": "The cabinet next to the stove — how wide is its front, from the stove to its far edge?",
+            "why": "📏 ONE TRIP, TWO TAPES — pair this with the ceiling beam one above; you are standing in the same house and the second costs about thirty seconds. ONE tape, FIVE answers: this single number settles how long the angled stove wall really is, where both ends of the counter run sit, where the counter seam falls, and the anchor everything east of the kitchen is measured from. We have it at 14.2 inches each side; one reading of the scan suggests about 31. Those are different rooms. It is not a leftover ask — five separate calculations converge here and none of them can answer it alone. It also decides whether the stove wall is right, and the stove, hood and tile panel are all sized to it — the first thing anyone looks at.",
+            "options": []
           },
           {
             "id": "tape-line-phrase",
@@ -350,9 +347,9 @@
           },
           {
             "id": "cap-3585",
-            "q": "IMG_3585 — what number was the tape showing?",
+            "q": "In IMG_3585 you laid a tape along the floor running west — what were its two ends?",
             "options": [],
-            "why": "We worked out what this photo is of, so you don't have to tell us: the blue L-shaped cut-line tape on the floor at the pantry-door corner, with your tape measure in frame. It also confirmed which way the door leaf faces, which closed a separate open item. All that's left is the reading itself — the number was too small to resolve."
+            "why": "We can read the tape but not what it spans: the hook sits on bare tile, the far end is out of frame, and the blade never crosses the blue cut-line, so the number can't be attributed to anything. The photo did earn its keep anyway — it identified the blue L-shaped cut-line tape at the pantry-door corner and confirmed which way the door leaf faces. Just the two endpoints, and the reading if you have it."
           },
           {
             "id": "cap-3594",

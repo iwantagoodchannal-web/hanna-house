@@ -131,10 +131,16 @@ const KSOF = H;  // pantry-soffit datum for the kitchen rework's uppers (M-15):
 // what changed is that it is now named and lives in one place.
 // ⚠ Not every literal 150 in parts/ is this height — 09-dining's 150.5/150.6 are
 // x-coordinates, 12-engine's are camera targets. Grep with care.
-// C-75 addendum: the pantry slider's ONE fact. w_pe.z1, w_peS.z0 and
-// wall45sq.door all DERIVE from this — never write -59.5 anywhere else.
-// ⚠ w is a CEILING (C-75): at 33.5" no slider of any type fits the wall.
-const SLIDER = {z0:-26.5, w:33};  SLIDER.z1 = SLIDER.z0 - SLIDER.w;   // -59.5
+// C-75 add.5: the pantry pocket's ONE fact (Jake's firm 30" panel, add.4b).
+// Opening sits north-biased in the peDoor band; everything derives from here.
+// ⚠ 33" stays the OPENING CEILING for this wall (C-75) — it reads as slack now;
+// widening past it kills any slider. Existing band stays 33" (C-2) — the pocket
+// narrows only the PROPOSED clear.
+const SLIDER = {panel:30, clear:27.5, bandN:-90.7, bandS:-57.7};
+// C-75 add.6: SOUTH-biased (photo-discriminated: end-panel-to-casing ~5" rules
+// out north). Opening hugs the band's south end; infill takes the north end.
+SLIDER.z0 = SLIDER.bandS - SLIDER.clear;      // -85.2 proposed opening north edge
+// infill: bandN..SLIDER.z0 (5.5"), DOOR VOID ONLY 0..DOOR_H — header exists.
 const PLAN = {
   cabinet:[
     // 17" case + a 2" door slot = Jake's 19" overall. The door used to be built
@@ -241,11 +247,14 @@ const PLAN = {
             // C-75 (by delegation): concealed top-hung track, opening HARD
             // against the corner end, leaf parks north, alder slab (C-21).
             // ⚠ w:33 is a CEILING — at 33.5" no slider of any type fits (C-75).
-            // ⚠ C-74 add.3: PROVISIONAL — DO NOT BUILD. peExt alone (27.9")
-            // cannot host this 33" cut; siting is Kitchen's Phase-2 call,
-            // gated on Jake's 30-SLIDE answer (C-75 addendum 2 decision rule).
-            door:{z0:SLIDER.z0, z1:SLIDER.z1, w:SLIDER.w,
-                  type:'slider-concealed', park:'north', provisional:true}},
+            // C-75 add.6 FINAL: concealed top-hung SURFACE track (pocket
+            // withdrawn — placement photo-discriminated south-biased; surface
+            // is robust to both). 30" white trimless panel slides SOUTH, parks
+            // over w_peD+peExt (+2.7"). TWO builds, one opening: cased swing
+            // in existing, trimless slider in proposed (Walls' code path).
+            door:{z0:SLIDER.z0, z1:SLIDER.bandS, panel:SLIDER.panel,
+                  type:'slider-concealed', slide:'south', trimless:true,
+                  infill:{z0:SLIDER.bandN, z1:SLIDER.z0, h:80}}},
 
   rooms:[
     {id:'bath', l:'BATHROOM', x0:0,     x1:75.75, z0:-101.5,z1:-19},     // 6'-3-3/4" x 5'-10-1/2"
@@ -356,8 +365,10 @@ const camera=new THREE.PerspectiveCamera(42,innerWidth/innerHeight,6,3200);
 })();
 /* Rebalanced (review): less flat ambient lift, a stronger warmer key —
    contrast comes from direction, not from a raised floor */
-scene.add(new THREE.HemisphereLight(0xffe9cf,0x241a10,0.15));
-scene.add(new THREE.AmbientLight(0xffffff,0.02));
+// named so 12-engine's fixture-light bake can rebalance them when it activates
+// (the bake supplies pooled practical light, so the flat lift comes down)
+const hemi=new THREE.HemisphereLight(0xffe9cf,0x241a10,0.15); scene.add(hemi);
+const amb=new THREE.AmbientLight(0xffffff,0.02); scene.add(amb);
 const key=new THREE.DirectionalLight(0xffeccd,0.58); key.position.set(260,620,430);
 key.castShadow=true; key.shadow.mapSize.set(2048,2048);
 key.shadow.camera.left=-260; key.shadow.camera.right=520;
@@ -643,8 +654,13 @@ const W=(c,r=0.62,rep=3)=>{
   WOODMAT.push(m); return m;};
 
 const MAT={
-  wall:   new THREE.MeshStandardMaterial({color:0xbfbdac,roughness:0.93,map:PLASTER_TEX,normalMap:NRM.plaster,normalScale:new THREE.Vector2(0.7,0.7)}),
-  wallInf:new THREE.MeshStandardMaterial({color:0xb8b6a6,roughness:0.93,map:PLASTER_TEX,normalMap:NRM.plaster,normalScale:new THREE.Vector2(0.7,0.7)}),
+  // C-25 correction (17 Aug): the walls are CREAM, not sage — the old 0xbfbdac
+  // was frame-derived and undecoded. Photo-matched to the dining wall in
+  // review-wine-1-today.jpg: two independent samples, (240,224,197) Core /
+  // (235,217,195) Wine, → 0xf0e0c5, authored sRGB + decoded in 12-engine.
+  // wallInf keeps its one-step-darker distinction, scaled with the same move.
+  wall:   new THREE.MeshStandardMaterial({color:0xf0e0c5,roughness:0.93,map:PLASTER_TEX,normalMap:NRM.plaster,normalScale:new THREE.Vector2(0.7,0.7)}),
+  wallInf:new THREE.MeshStandardMaterial({color:0xe6d6ba,roughness:0.93,map:PLASTER_TEX,normalMap:NRM.plaster,normalScale:new THREE.Vector2(0.7,0.7)}),
   floor:  M(0xc8b79c,0.9),
   bath:   M(0xa8bfd4,0.95),
   pant:   M(0xbfd0c2,0.95),
@@ -1143,7 +1159,14 @@ PLAN.walls.forEach(buildWall);
   const tint=TINT(PLAN.walls.find(w=>w.id==='w_peN').tint);
   const A=(z0,z1,y0,y1,m)=>{const b=pbox(p.x0-CT,p.x1+CT,z0,z1,y0,y1,m,G.exist);
     b.userData={y0,y1}; return b;};
-  A(p.z0,p.z1,DOOR_H,H,tint);                           // header over the opening
+  // ⚠ THE HEADER GOES IN G.walls, NOT G.exist — it is the same header in both
+  // states (what differs below it is the opening, not the lintel over it). Built
+  // into G.exist it left the PROPOSED state open from y=0 to y=H, 33" wide, floor
+  // to ceiling: a missing wall rather than a doorway. That has been shipping since
+  // add.3 and nobody had looked at the proposal at this corner. Kitchen's slider
+  // spec fills 0..DOOR_H only, which is correct and assumes this.
+  const hd=pbox(p.x0-CT,p.x1+CT,p.z0,p.z1,DOOR_H,H,tint,G.walls);
+  hd.userData={y0:DOOR_H,y1:H};
   A(p.z0-C,p.z0+R,0,DOOR_H+C,MAT.alder);                // casing, running PAST the
   A(p.z1-R,p.z1+C,0,DOOR_H+C,MAT.alder);                // opening, never short
   A(p.z0-C,p.z1+C,DOOR_H+R,DOOR_H+C,MAT.alder);
@@ -1152,6 +1175,32 @@ PLAN.walls.forEach(buildWall);
   g.position.set(p.x1,0,p.z1); g.rotation.y=-0.52; G.exist.add(g);
   box(1.75,DOOR_H-1,wdt,MAT.alder,0.9,(1+DOOR_H)/2,-wdt/2,g);        // alder, east
   box(0.35,DOOR_H-1,wdt-0.4,M(0xefe9dd,0.9),-0.05,(1+DOOR_H)/2,-wdt/2,g);  // white back
+})();
+
+// C-75 add.6 (Kitchen): the PROPOSED pantry slider. Surface top-hung track, not a
+// pocket — Kitchen withdrew the pocket once the band's SOUTH bias held up, on the
+// reasoning that a surface track survives both candidate placements and a pocket
+// survives only one. All G.cab: the proposal replaces the existing swing.
+//   opening   27.5" clear, south-biased in the 33" band
+//   infill    the 5.5" the opening does not use, at the band's NORTH end
+//   panel     30" x 80", WHITE and TRIMLESS - the dad: "no trim, so it almost
+//             disappears into the wall". No casing is built here on purpose.
+//   parked    slid SOUTH over w_peD + peExt, clear of the corner by 2.7"
+// Built in the PARKED-OPEN position so the doorway reads as usable and the panel
+// is visible on the wall it runs on. Closed-over-the-opening is a one-line change
+// if anyone prefers to show the trimless face doing its disappearing act.
+(function(){
+  const p=PLAN.peDoor, CL=27.5, PAN=30, PH=80, T=1.5, G0=0.75;
+  const o0=p.z1-CL, o1=p.z1;                       // opening, hard to the south end
+  const tint=TINT(PLAN.walls.find(v=>v.id==='w_peN').tint);
+  const inf=pbox(p.x0,p.x1,p.z0,o0,0,DOOR_H,tint,G.cab);   // 5.5" infill, north end
+  inf.userData={y0:0,y1:DOOR_H};
+  const face=p.x1+G0;                              // east face: the side you enter from
+  const park0=o1, park1=o1+PAN;                    // slid south, onto w_peD + peExt
+  const leaf=pbox(face,face+T,park0,park1,1,1+PH,M(0xeeeae0,0.86),G.cab);
+  leaf.userData={y0:1,y1:1+PH};
+  const brd=pbox(face-0.4,face+T+0.6,o0-1,park1+1,DOOR_H+1,DOOR_H+5.5,tint,G.cab);
+  brd.userData={y0:DOOR_H+1,y1:DOOR_H+5.5};        // header board hiding the track
 })();
 /* ===================== the run: wine + coffee ===================== */
 (function(){
@@ -1390,7 +1439,11 @@ PLAN.walls.forEach(buildWall);
   // strictly inside the plinth three lines up (-1.2..169.2, -2.2..-0.8, 0..4.5)
   // on all three axes, same material, so it rendered nothing and shared the
   // plinth's y=0 and y=4.5 planes. The plinth IS the toe kick.
-  // sec_048: a switch ~45" AFF and a receptacle ~16" AFF on the west-facing return
+  // sec_048, and PHOTO-CONFIRMED 18 Aug — one of the few frame readings that
+  // survived the day. review-wine-3 / IMG_3588 shows the Wallindent pier with a
+  // switch high and a receptacle low on its west face, exactly as C-7/C-31/C-39
+  // inferred from the frames. First hard evidence for that whole chain.
+  // A switch ~45" AFF and a receptacle ~16" AFF on the west-facing return
   (function(){
     const pl=(y0,y1,z0,z1)=>{const m=pbox(-8.3,-8.02,z0,z1,y0,y1,MAT.orb,G.walls);
       m.userData={y0,y1};};
@@ -1784,12 +1837,22 @@ PLAN.walls.forEach(buildWall);
   // nothing. L is UNCHANGED at 142 — it is the best-evidenced number here
   // (C-16, tape 142.5, scan M-3 141.3/144.4) and nothing has challenged it.
   //
-  // Centred is an INTERIM, not the answer. It gives 4.40" of reveal each side,
-  // which agrees with the 4.1"-a-side implied by the straight-on photograph to
-  // within 0.3" — but that symmetry is arithmetic, not a measurement. The east
-  // side probably carries trim PLUS the chamfer facet where the west carries
-  // trim only, so the true split is likely uneven. Pending the Poly-Walls jamb
-  // positions; when they land, replace the /2 with the real insets.
+  // Centred is a SANCTIONED PROVISIONAL, not the answer. Jake, 18 Aug: "for the
+  // gap, just make your best estimate, and I'll measure it later, and we can
+  // change it." So this value is allowed to be here — it is not allowed to
+  // become the answer by sitting here.
+  //
+  // It gives 4.40" of reveal each side, agreeing to within 0.3" with the
+  // 4.1"-a-side implied by the straight-on photograph. That agreement is
+  // arithmetic meeting arithmetic, not a measurement, and the evidence says the
+  // real split is UNEVEN: the east side carries trim PLUS the chamfer facet
+  // where the west carries trim only. Expect his tape to come back east-biased.
+  //
+  // WHAT REPLACES THIS: one tape, west reveal and east reveal. NOT the scan —
+  // Polycam draws openings and not casings, so the jamb positions this needs are
+  // provably not in it (Hub v4, M-9c). An earlier version of this comment said
+  // "pending the Poly-Walls jamb positions"; that source cannot answer and
+  // waiting on it would have been waiting on nothing.
   const RUNW = PLAN.walls.find(w=>w.id==='w_run');
   const X0 = (RUNW.x1 - RUNW.x0 - L)/2;
   const EX=(x0,x1,z0,z1,y0,y1,m)=>pbox(x0+X0,x1+X0,z0,z1,y0,y1,m,G.exist);
@@ -1884,9 +1947,20 @@ G.exist.visible=false;
   W(0,0.8,206,208.5,29,91.5,MAT.alder);
   W(0.03,0.77,150.5,207.5,30.4,33,MAT.alder);          // stool
   W(-3.8,-2.6,178.2,179.8,33,87,MAT.alder);            // ONE mullion
-  // DR-W1, the MASK wall, is the EAST wall - sec_058 shows its free outside
-  // corner with the island stools immediately past it. It was modelled on the
-  // west. DR-W3, the short credenza wall, is the west one (sec_088, sec_117).
+  // ⚠ C-28, AND IT IS THE LEAST-VERIFIED CLAIM IN THIS FILE. DR-W1, the MASK
+  // wall, is the EAST wall - sec_058 shows its free outside corner with the
+  // island stools immediately past it. It was modelled on the west. DR-W3, the
+  // short credenza wall, is the west one (sec_088, sec_117).
+  // Its provenance is THREE FRAME READINGS AND NOTHING ELSE — no tape, no
+  // photograph. Checked against all eight review photos plus the three unstaged
+  // originals on 18 Aug: every camera stands at or near the counter looking
+  // north, so the dining east and west walls appear in NONE of them. C-28 is
+  // NOT TESTABLE from any material we have.
+  // That matters because it is load-bearing — it places this console, the masks
+  // AND the credenza — and because pure camera matches are the class Jake
+  // overturned five times in one day. It asserts the room is MIRRORED, which is
+  // either completely right or completely wrong. Do not treat it as settled.
+  // Closes with: one photograph looking south-east from the counter.
   // console: plinth, open shelf, top, three full-depth dividers. NOT legged —
   // the 0..4 plinth runs the whole 90" footprint. Dividers are inset 0.03" so
   // they no longer share the plinth's x=170 / x=179.4 / z=190 planes.
@@ -2316,7 +2390,7 @@ function applyFin(i){
 // still no evidence for it (C-63's rule: each needs its own).
 // 'shaker' (C-68) rides the same list. 'ktile' needs no decode — its colour is
 // in STACK_TEX, which declares sRGBEncoding itself.
-for(const k of ['counter','alder','panel','table','beam','base','shaker','rafter','console','orb']) MAT[k].color.convertSRGBToLinear();
+for(const k of ['counter','alder','panel','table','beam','base','shaker','rafter','console','orb','wall','wallInf']) MAT[k].color.convertSRGBToLinear();
 document.getElementById('bReal').onclick=function(){
   REALON=!REALON; this.classList.toggle('on',REALON); applyReal(REALON);
 };
@@ -2603,8 +2677,21 @@ addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updat
    mesh, 9 hemisphere directions x 4 distances of "how much stuff is near me",
    written into vertex colours. Shadow tint is warm (brown, not grey) because
    the light it replaces would have bounced off wood and travertine. */
+/* ===== FIXTURE-TRUE LIGHT LAYER (C-76) — INERT until 10-fixtures exports CANS.
+   The house's recessed cans are modelled but emit nothing; only 12 of ~30 carry
+   runtime PointLights (a frame-rate compromise). This bakes warm pools from
+   EVERY fixture position into the same vertex-colour layer as the AO —
+   occlusion-tested through the AO's own voxel grid, zero runtime lights.
+   Vertex lighting needs vertices: large faces are subdivided (~16" edges) at
+   bake time, ONLY when the light layer is active. When Walls lands
+   `const CANS=[[x,z,y,lit],...]` (built by the loop that draws the fixtures,
+   so it cannot drift), this activates on the next build with no edit here. */
 (function(){
   root.updateMatrixWorld(true);
+  const LB=(typeof CANS!=='undefined'&&Array.isArray(CANS)&&CANS.length)?CANS:null;
+  const LB_I=2.2;                 // pool intensity  (tuned by eye — see C-76)
+  const LB_BASE=0.80;             // unlit floor: room away from any fixture
+  const LB_R2=130*130;            // cull radius² per can (pools are gone by 130")
   const X0=-270,Y0=-2,Z0=-180,V=4,NX=190,NY=40,NZ=112;
   const occ=new Uint8Array(NX*NY*NZ);
   const bb=new THREE.Box3();
@@ -2630,6 +2717,52 @@ addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updat
   for(let a=0;a<8;a++){const t=a/8*Math.PI*2;
     DIRS.push([Math.cos(t)*0.85,0.53,Math.sin(t)*0.85]);}
   const DIST=[3.5,7,12,19], DW=[1,0.72,0.45,0.25];
+  /* Midpoint-subdivide a triangle soup until no edge exceeds maxE. Pools live
+     mid-face; bevelBox gives a 248" floor face exactly two triangles, so
+     without this the light layer would have nowhere to land. Non-indexed in,
+     non-indexed out; uv and normal interpolated (faces are planar, so the
+     lerped normal is exact after renormalise). */
+  function subdivLarge(geo,maxE){
+    let g=geo.index?geo.toNonIndexed():geo;
+    let P=g.attributes.position.array, U=g.attributes.uv&&g.attributes.uv.array,
+        N=g.attributes.normal&&g.attributes.normal.array;
+    for(let pass=0;pass<5;pass++){
+      let need=false;
+      for(let i=0;i<P.length && !need;i+=9){
+        const e=Math.max(Math.hypot(P[i+3]-P[i],P[i+4]-P[i+1],P[i+5]-P[i+2]),
+                         Math.hypot(P[i+6]-P[i+3],P[i+7]-P[i+4],P[i+8]-P[i+5]),
+                         Math.hypot(P[i]-P[i+6],P[i+1]-P[i+7],P[i+2]-P[i+8]));
+        if(e>maxE) need=true;
+      }
+      if(!need) break;
+      const nP=[],nU=[],nN=[];
+      const emit=(a,b,c)=>{                    // a,b,c = per-vertex [x,y,z,u,v,nx,ny,nz]
+        for(const v of [a,b,c]){ nP.push(v[0],v[1],v[2]);
+          if(U) nU.push(v[3],v[4]); if(N) nN.push(v[5],v[6],v[7]); } };
+      const mid=(a,b)=>a.map((q,k)=>(q+b[k])/2);
+      for(let i=0,j=0;i<P.length;i+=9,j+=6){
+        const V3=t=>[P[i+t*3],P[i+t*3+1],P[i+t*3+2],
+                     U?U[j+t*2]:0,U?U[j+t*2+1]:0,
+                     N?N[i+t*3]:0,N?N[i+t*3+1]:0,N?N[i+t*3+2]:0];
+        const A=V3(0),B=V3(1),C=V3(2);
+        const e=Math.max(Math.hypot(B[0]-A[0],B[1]-A[1],B[2]-A[2]),
+                         Math.hypot(C[0]-B[0],C[1]-B[1],C[2]-B[2]),
+                         Math.hypot(A[0]-C[0],A[1]-C[1],A[2]-C[2]));
+        if(e>maxE){ const AB=mid(A,B),BC=mid(B,C),CA=mid(C,A);
+          emit(A,AB,CA); emit(AB,B,BC); emit(CA,BC,C); emit(AB,BC,CA);
+        } else emit(A,B,C);
+      }
+      P=new Float32Array(nP); if(U)U=new Float32Array(nU); if(N)N=new Float32Array(nN);
+    }
+    const out=new THREE.BufferGeometry();
+    out.setAttribute('position',new THREE.BufferAttribute(P,3));
+    if(U) out.setAttribute('uv',new THREE.BufferAttribute(U,2));
+    if(N){ for(let i=0;i<N.length;i+=3){ const l=Math.hypot(N[i],N[i+1],N[i+2])||1;
+             N[i]/=l; N[i+1]/=l; N[i+2]/=l; }
+           out.setAttribute('normal',new THREE.BufferAttribute(N,3)); }
+    else out.computeVertexNormals();
+    return out;
+  }
   const nm=new THREE.Matrix3(), vp=new THREE.Vector3(), vn=new THREE.Vector3(),
         ta=new THREE.Vector3(), tb=new THREE.Vector3(), up=new THREE.Vector3(0,1,0),
         ux=new THREE.Vector3(1,0,0), dir=new THREE.Vector3();
@@ -2641,6 +2774,24 @@ addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updat
     if(!m||m.isMeshBasicMaterial||SKIP.has(m)) return;
     const isWall=(m===MAT.wall||m===MAT.wallInf||m===MAT.vault||(m.userData&&m.userData.isWall));
     o.geometry=o.geometry.clone();          // bevelBox geometries are cached/shared
+    let nearCans=null;
+    if(LB){
+      // per-MESH can cull: only fixtures within throw of this mesh's bounds are
+      // consulted per vertex — the whole-house list never enters the hot loop
+      bb.setFromObject(o);
+      nearCans=LB.filter(cn=>{
+        const cy=(cn[2]||H);
+        const dx=Math.max(bb.min.x-cn[0],0,cn[0]-bb.max.x),
+              dy=Math.max(bb.min.y-cy,0,cy-bb.max.y),
+              dz=Math.max(bb.min.z-cn[1],0,cn[1]-bb.max.z);
+        return dx*dx+dy*dy+dz*dz<LB_R2;
+      });
+      // subdividing costs vertices (each pays full AO too); spend them only
+      // where a pool can land — never on ceilings (cans face away from them)
+      if(nearCans.length && o.parent!==G.ceil &&
+         Math.max(bb.max.x-bb.min.x,bb.max.y-bb.min.y,bb.max.z-bb.min.z)>24)
+        o.geometry=subdivLarge(o.geometry,22);
+    }
     const pos=o.geometry.attributes.position, nrm=o.geometry.attributes.normal;
     if(!nrm) return;
     const col=new Float32Array(pos.count*3);
@@ -2664,14 +2815,47 @@ addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updat
       let ao=1-0.82*(occl/DIRS.length);
       ao=0.38+0.62*Math.max(0,Math.min(1,ao));
       if(isWall) ao=0.78+0.22*ao;             // big faces: corner-driven AO reads as blotch
+      let lr=0,lg=0,lb=0;
+      if(LB&&nearCans.length){
+        for(const cn of nearCans){
+          const cy=(cn[2]||H)-2.5;            // emit just below the trim ring
+          const dx=cn[0]-vp.x, dy=cy-vp.y, dz=cn[1]-vp.z;
+          const d2=dx*dx+dy*dy+dz*dz;
+          if(d2>LB_R2) continue;
+          const d=Math.sqrt(d2)||1;
+          const ndl=(vn.x*dx+vn.y*dy+vn.z*dz)/d;
+          if(ndl<=0) continue;
+          let vis=1;                          // march the AO voxel grid to the can;
+          if(d>26)                            // nearer than that cannot be occluded
+            for(let t=8;t<d-11;t+=8)          // stop short so the ceiling slab
+              if(solid(vp.x+dx/d*t+vn.x*1.2,  // holding the can does not self-shadow
+                       vp.y+dy/d*t+vn.y*1.2,
+                       vp.z+dz/d*t+vn.z*1.2)){ vis=0; break; }
+          if(!vis) continue;
+          const E=LB_I*ndl/(1+d2/3600);       // soft inverse-square, ~60" half-throw
+          lr+=E; lg+=E*0.80; lb+=E*0.58;      // ~2700K tungsten warm
+        }
+      }
+      if(LB){
+        const cl=v=>Math.min(1.75,v);         // headroom for pools, no blowouts
+        col[i*3]  =cl(Math.pow(ao,0.85)*(LB_BASE+lr));
+        col[i*3+1]=cl(ao*(LB_BASE+lg));
+        col[i*3+2]=cl(Math.pow(ao,1.25)*(LB_BASE+lb));
+      }else{
       col[i*3]  =Math.pow(ao,0.85);          // warm shadows: R decays slowest,
       col[i*3+1]=ao;                          // B fastest
       col[i*3+2]=Math.pow(ao,1.25);
+      }
     }
     o.geometry.setAttribute('color',new THREE.BufferAttribute(col,3));
     mats.add(m);
   });
   mats.forEach(m=>{m.vertexColors=true; m.needsUpdate=true;});
+  if(LB){
+    // the pooled practicals now carry the room, so the flat lift comes DOWN —
+    // pools need darkness to sit in. Values paired with LB_I/LB_BASE above.
+    hemi.intensity=0.10; amb.intensity=0.012;
+  }
 })();
 
 // shadows: everything solid casts and receives. Skip the daylight panels and
@@ -2693,6 +2877,7 @@ G.door.matrixAutoUpdate=true;
      {t:'pose', x,z,yaw,pitch,eye,fov,door(inches 0..84) [,jump]} — explicit pose
      {t:'state', v:'proposed'|'existing'|'both'}
      {t:'fin', i}  {t:'niche', on}  {t:'door', v:0..1}  {t:'warm', v:0..1}
+     {t:'kitRaise', on}  — kitchen soffit-raise group (no-op until Kitchen registers G.kitRaise)
      {t:'walk', on}  {t:'drive', v:-1..1}  {t:'look', dx,dy}
    Sends: {t:'ready', bottles, tour:{total,marks}, fins}  {t:'walk', on}
    Both smoothing layers are dt-based so scrub speed never changes the feel:
@@ -2780,7 +2965,15 @@ addEventListener('message',ev=>{
       delete EMB.poseTgt.t; delete EMB.poseTgt.jump;
       if(d.jump) EMB.cur=null;
       break;
-    case 'state': setState(d.v==='existing'?'old':(d.v==='both'?'both':'new')); break;
+    // Canonical vocabulary is 'existing'|'proposed'|'both'. 'old'/'new' are
+    // accepted as aliases because setState's internal names leak into console
+    // testing — without the alias, a sent 'old' silently meant PROPOSED (only
+    // the literal 'existing' mapped). Anything unrecognised still means proposed.
+    case 'state': setState((d.v==='existing'||d.v==='old')?'old':(d.v==='both'?'both':'new')); break;
+    // Kitchen-rework contract (C-68/C-73): Kitchen registers G.kitRaise (the
+    // soffit-raise group, visible:false at build) and this toggles it. Harmless
+    // no-op until that group exists — same defensive pattern as G.kitOld/kitNew.
+    case 'kitRaise': if(G.kitRaise){ G.kitRaise.visible=!!d.on; shDirty(); } break;
     case 'fin':   applyFin(((+d.i||0)%FINISHES.length+FINISHES.length)%FINISHES.length); break;
     case 'niche': setNiche(!!d.on); break;
     case 'door':  doorTgt=Math.max(0,Math.min(1,+d.v||0))*84; break;
@@ -2860,4 +3053,4 @@ tick();
 </script>
 </body>
 </html>
-<!-- build:18a1acd -->
+<!-- build:109d8e0 -->
