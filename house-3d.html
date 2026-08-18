@@ -180,9 +180,14 @@ const PLAN = {
     // door is the measured swing on the chamfer (wall45d). D18 was the SAME door
     // mis-hosted here by the disproven frame (C-50: "was a swing leaf"); its
     // slider successor lives on the PROPOSED extended wall (wall45sq below).
-    // C-75 addendum: z1 DERIVES from SLIDER — the wall south of the split is
-    // w_peS (existing only, below), so the proposed opening never cuts this.
-    {id:'w_pe',  x0:186.2,  x1:192.3, z0:-95.5, z1:SLIDER.z1, tint:0xdfd8c9},
+    // C-74 add.3: the pantry east wall is now w_peN + [the peDoor band] + w_peD.
+    // The band z -90.7..-57.7 (33", position INFERRED, video says south-biased)
+    // is the REAL pantry doorway: swing leaf existing (alder E face, WHITE W
+    // back), provisional OPEN access in the proposal until Kitchen's Phase-2
+    // sites the slider (C-75 cut PROVISIONAL, gated on the 30-SLIDE answer).
+    // Walls builds the band from peDoor below; buildWall never sees it.
+    {id:'w_peN', x0:186.2,  x1:192.3, z0:-95.5, z1:-90.7, tint:0xdfd8c9},
+    {id:'w_peD', x0:186.2,  x1:192.3, z0:-57.7, z1:-52.9, tint:0xdfd8c9},
     // ONE continuous north wall: bathroom, pantry and the kitchen sink leg all
     // share it. The old k_n / k_nw jog was a fabrication.
     {id:'w_back',x0:-110.4, x1:174.1, z0:-101.5,z1:-95.5},
@@ -217,8 +222,12 @@ const PLAN = {
   // continuation (x 152.3..186.2 flat at z -25..-19) into the proposed state.
   // It carries THE pantry door (M-9c): ~33" leaf, hinge 5.2" from the south end,
   // swings into dining. As-built swing; C-50 makes it a slider in the proposal.
-  wall45d:{id:'w_45d', ax:152.3, az:-19, bx:186.2, bz:-52.9, t:6, existOnly:true,
-           door:{off:5.2, w:33, casing:2.5}},
+  // C-74 add.3: NO door on the chamfer — Poly-Doors recorded D18's OPEN LEAF
+  // standing in this plane (the detector records the leaf, not the doorway);
+  // shelves wrap the chamfer inside the pantry. Blank face, existing state.
+  wall45d:{id:'w_45d', ax:152.3, az:-19, bx:186.2, bz:-52.9, t:6, existOnly:true},
+  // C-74 add.3: the real pantry doorway band — see w_peN/w_peD comment above.
+  peDoor:{x0:186.2, x1:192.3, z0:-90.7, z1:-57.7, inferred:true},
   // C-74 addendum: the PROPOSAL's shell at the same corner (design geometry —
   // the squaring decision C-2/M-9b, not a measurement). TWO pieces, both
   // proposal-state (G.cab per Core's engine call): the squared run-wall band,
@@ -232,12 +241,12 @@ const PLAN = {
             // C-75 (by delegation): concealed top-hung track, opening HARD
             // against the corner end, leaf parks north, alder slab (C-21).
             // ⚠ w:33 is a CEILING — at 33.5" no slider of any type fits (C-75).
+            // ⚠ C-74 add.3: PROVISIONAL — DO NOT BUILD. peExt alone (27.9")
+            // cannot host this 33" cut; siting is Kitchen's Phase-2 call,
+            // gated on Jake's 30-SLIDE answer (C-75 addendum 2 decision rule).
             door:{z0:SLIDER.z0, z1:SLIDER.z1, w:SLIDER.w,
-                  type:'slider-concealed', park:'north'}},
-  // C-75 addendum: the 6.6" of old pantry east wall that survives ONLY in the
-  // existing state (the proposal's opening swallows it). existOnly like wall45d;
-  // Walls builds it into G.exist. Extent derives from SLIDER — one fact.
-  w_peS:{id:'w_peS', x0:186.2, x1:192.3, z0:SLIDER.z1, z1:-52.9, existOnly:true},
+                  type:'slider-concealed', park:'north', provisional:true}},
+
   rooms:[
     {id:'bath', l:'BATHROOM', x0:0,     x1:75.75, z0:-101.5,z1:-19},     // 6'-3-3/4" x 5'-10-1/2"
     {id:'pant', l:'PANTRY',   x0:81.82, x1:186.2, z0:-101.5,z1:-19},     // C-74: east wall measured at ~186 (was circular 86.2 wide)
@@ -1082,22 +1091,15 @@ PLAN.walls.forEach(buildWall);
   const at=a=>a-len/2;                                  // face distance -> local x
   const seg=(a,b,y0,y1,m,d,z)=>{ if(b-a<=0.05||y1-y0<=0.05) return;
     box(b-a, y1-y0, d||w.t, m||MAT.wall, at((a+b)/2), (y0+y1)/2, z||0, g); };
-  const o0=w.door.off, o1=w.door.off+w.door.w, C=w.door.casing, CT=0.8, R=0.05;
-  seg(0,o0,0,H); seg(o1,len,0,H); seg(o0,o1,DOOR_H,H);  // jambs + header
-  // baseboard, dining face only — the run wall's own base dies at x=152.3 and a
-  // baseboard that stops mid-wall is exactly what gets noticed
-  seg(0,o0,0,5.5,MAT.base,0.7,F+0.35); seg(o1,len,0,5.5,MAT.base,0.7,F+0.35);
-  // casing. The legs run R PAST the opening, never short of it — stopping short
-  // hands the reveal to the wall and turns 6" of alder jamb into white plaster,
-  // which is the regression Jake caught on the other three doors today.
-  const csg=(a,b,y0,y1)=>box(b-a, y1-y0, w.t+CT*2, MAT.alder, at((a+b)/2), (y0+y1)/2, 0, g);
-  csg(o0-C,o0+R,0,DOOR_H+C); csg(o1-R,o1+C,0,DOOR_H+C); csg(o0-C,o1+C,DOOR_H,DOOR_H+C);
-  // leaf, closed, on the dining face. In G.exist rather than G.leafC/G.leafO, so
-  // it follows the STATE (this door does not exist in the proposal) rather than
-  // the Doors toggle — it is deliberately not animated.
-  box(o1-o0-0.2, DOOR_H-1, 1.75, MAT.alder, at((o0+o1)/2), (1+DOOR_H)/2, F+1.08, g);
-  for(const p of [[5,DOOR_H*0.44],[DOOR_H*0.5,DOOR_H-4]])
-    box(o1-o0-6.2, p[1]-p[0], 0.35, MAT.panel, at((o0+o1)/2), (p[0]+p[1])/2, F+1.78, g);
+  // ⚠ BLANK FACE — no door here. C-74 addendum 3: the frame-verified video shows
+  // SHELVING WRAPPING THIS CORNER BAY inside the pantry, and nobody shelves across
+  // a doorway. The scan's Poly-Doors entity in this plane was D18's OPEN LEAF —
+  // a door detector records where the leaf IS, not where the doorway is. My own
+  // baseboard evidence said the same thing first and I only read half of it:
+  // three segments and two mitres at IMG_3585 put the casing on the plane AFTER
+  // the facet, not on the facet. The doorway is the peDoor band in w_pe, below.
+  seg(0,len,0,H);
+  seg(0,len,0,5.5,MAT.base,0.7,F+0.35);                 // baseboard, dining face
 })();
 // PLAN.wall45sq — the PROPOSED shell, two pieces, both G.cab so they appear only
 // with the proposal and vanish with it (the chamfer above is G.exist and does the
@@ -1123,24 +1125,33 @@ PLAN.walls.forEach(buildWall);
   }
 })();
 
-// C-75: w_peS — the 6.6" of pantry east wall SOUTH of the slider's north edge.
-// EXISTING STATE ONLY. The proposed slider's opening runs through this stretch,
-// so if this stub existed in the proposal the door would be cut through solid
-// wall; and if it did not exist in the EXISTING state, the pantry's east wall
-// would have a 6.6" hole in it — which is precisely the state the model was in
-// between Hub's PLAN split and this commit, deliberately and briefly.
-// Its extent derives from SLIDER (01-plan.js), so resizing the door moves this
-// wall with it rather than quietly reopening the old one.
-// The tint is read off w_pe rather than repeated: this IS a piece of that wall,
-// and a second literal here is a colour seam waiting for someone to retint one
-// of them. Same reason SLIDER exists at all.
+// C-74 add.3: the peDoor band — the REAL pantry doorway, in w_pe between
+// w_peN and w_peD. buildWall never sees it; the two flanking stubs are ordinary
+// PLAN.walls entries and this is the hole between them.
+//   EXISTING  jambs are the stubs themselves, so this builds the head, the casing
+//             and a swing leaf: alder face EAST (the kitchen/transition side you
+//             enter from), WHITE back WEST into the pantry, per the video.
+//   PROPOSED  left OPEN, no infill. The rework moves pantry access to C-50's
+//             slider, whose position is Kitchen's Phase-2 composition question —
+//             so leaving the band open keeps the proposal accessible instead of
+//             sealing the pantry behind a door nobody has sited yet.
+// ⚠ The leaf is built SWINGING, not parked flat. The stubs either side are 4.8",
+// and a 33" leaf cannot lie flat on 4.8" of wall — the same arithmetic that made
+// me stop building impossible parked leaves in doorSet this afternoon.
 (function(){
-  const p=PLAN.w_peS, B=5.5, T=0.7;
-  const src=PLAN.walls.find(w=>w.id==='w_pe');
-  const m=pbox(p.x0,p.x1,p.z0,p.z1,0,H,TINT(src.tint),G.exist); m.userData={y0:0,y1:H};
-  const b1=pbox(p.x0-T,p.x0,p.z0,p.z1,0,B,MAT.base,G.exist);
-  const b2=pbox(p.x1,p.x1+T,p.z0,p.z1,0,B,MAT.base,G.exist);
-  b1.userData=b2.userData={y0:0,y1:B};
+  const p=PLAN.peDoor, C=3.2, CT=0.8, R=0.05, B=5.5, T=0.7;
+  const tint=TINT(PLAN.walls.find(w=>w.id==='w_peN').tint);
+  const A=(z0,z1,y0,y1,m)=>{const b=pbox(p.x0-CT,p.x1+CT,z0,z1,y0,y1,m,G.exist);
+    b.userData={y0,y1}; return b;};
+  A(p.z0,p.z1,DOOR_H,H,tint);                           // header over the opening
+  A(p.z0-C,p.z0+R,0,DOOR_H+C,MAT.alder);                // casing, running PAST the
+  A(p.z1-R,p.z1+C,0,DOOR_H+C,MAT.alder);                // opening, never short
+  A(p.z0-C,p.z1+C,DOOR_H+R,DOOR_H+C,MAT.alder);
+  // swing leaf, hinged at the south jamb, standing ~30 deg into the transition
+  const wdt=p.z1-p.z0, g=new THREE.Group();
+  g.position.set(p.x1,0,p.z1); g.rotation.y=-0.52; G.exist.add(g);
+  box(1.75,DOOR_H-1,wdt,MAT.alder,0.9,(1+DOOR_H)/2,-wdt/2,g);        // alder, east
+  box(0.35,DOOR_H-1,wdt-0.4,M(0xefe9dd,0.9),-0.05,(1+DOOR_H)/2,-wdt/2,g);  // white back
 })();
 /* ===================== the run: wine + coffee ===================== */
 (function(){
@@ -2849,4 +2860,4 @@ tick();
 </script>
 </body>
 </html>
-<!-- build:b7ce5bc -->
+<!-- build:18a1acd -->
